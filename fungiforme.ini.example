@@ -1,0 +1,16 @@
+# Use this file as template.
+# Copy it and rename it `fungiforme.ini`
+
+[DISCORD]
+Token = Test of Token
+Channel = 0000000099999999
+
+[FUNGIFORME]
+MinimumGifReactions = 2
+
+[DATE]
+DatetimeFormat = %%Y-%%m-%%d %%H:%%M:%%S
+DateFormat = %%Y-%%m-%%d
+HourStart = 14:00:00
+HourEnd = 15:00:00
+TimezoneHoursDelay = 2
