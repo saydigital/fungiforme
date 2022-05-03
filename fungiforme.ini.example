@@ -7,6 +7,13 @@ Channel = 0000000099999999
 
 [FUNGIFORME]
 MinimumGifReactions = 2
+# Free list of points to assign to users based on GIF ranking.
+# Fungiform keep them dinamically
+PointsForPosition1 = 1
+PointsForPosition2 = 0.3
+# Free list of points to assign to users based on original message ranking.
+# Fungiform keep them dinamically
+PointsForOriginalMessagePosition1 = 0.2
 
 [DATE]
 DatetimeFormat = %%Y-%%m-%%d %%H:%%M:%%S

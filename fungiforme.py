@@ -98,14 +98,29 @@ async def winner(ctx, date=None, start=None, end=None):
             continue
         votes = gifs[message]["reactions"]
         if votes in ordered_votes:
-            color = colors[ordered_votes.index(votes)]
+            vote_index = ordered_votes.index(votes)
+            vote_position = vote_index + 1
+            color = colors[vote_index]
         else:
             color = default_color
+            vote_position = 0
         original_message = await channel.fetch_message(
             message.reference.message_id)
         voted_by = ', '.join([user.name for user in gifs[message]["users"]])
+        gif_points = config['FUNGIFORME'].getfloat(
+            f'PointsForPosition{vote_position}', 0)
+        if gif_points > 0:
+            gif_points_message = f" (+{gif_points} points)"
+        else:
+            gif_points_message = ""
+        message_points = config['FUNGIFORME'].getfloat(
+            f'PointsForOriginalMessagePosition{vote_position}', 0)
+        if message_points > 0:
+            message_points_message = f" (+{message_points} points)"
+        else:
+            message_points_message = ""
         embedVar = Embed(
-            title=f"{str(votes)} votes",
+            title=f"{str(votes)} votes{gif_points_message}",
             description=f"Voted by *{voted_by}*",
             color=color,
             url=message.jump_url
@@ -118,7 +133,7 @@ async def winner(ctx, date=None, start=None, end=None):
         embedVar.add_field(
             name="As reply to",
             value=f"{original_message.content}\n"
-            f"- {original_message.author.name} -",
+            f"- {original_message.author.name}{message_points_message} -",
             inline=True,
             )
         user_showed.append(message.author)
