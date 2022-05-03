@@ -85,17 +85,22 @@ async def winner(ctx, date=None, start=None, end=None):
             gifs.items(),
             key=lambda item: item[1]["reactions"],
             reverse=True))
-    winner_points = 0
+        ordered_points = set()
+        for message in gifs:
+            ordered_points.add(gifs[message]["reactions"])
+        ordered_points = sorted(ordered_points, reverse=True)[:3]
+    # Gold, silver, and bronze
+    colors = [Color.gold(), Color.dark_gray(), Color.from_rgb(184, 115, 51)]
+    default_color = Color.blue()
     user_showed = []
     for message in gifs:
         if message.author in user_showed:
             continue
         points = gifs[message]["reactions"]
-        if points >= winner_points:
-            winner_points = points
-            color = Color.gold()
+        if points in ordered_points:
+            color = colors[ordered_points.index(points)]
         else:
-            color = Color.blue()
+            color = default_color
         original_message = await channel.fetch_message(
             message.reference.message_id)
         voted_by = ', '.join([user.name for user in gifs[message]["users"]])
