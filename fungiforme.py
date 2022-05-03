@@ -1,6 +1,7 @@
 # Invite URL
 # https://discord.com/api/oauth2/authorize?client_id=964498743451856938&permissions=2147697728&scope=bot
 
+from os.path import exists
 import configparser
 from datetime import datetime, timedelta
 from discord.ext import commands
@@ -21,6 +22,18 @@ TIMEZONE_HOURS_DELAY = config['DATE'].getint('TimezoneHoursDelay')
 
 
 fungiforme = commands.Bot(command_prefix='!')
+
+
+@fungiforme.command()
+async def rules(ctx):
+    rules = \
+        "No rules defined!\n" \
+        "> What is an anarchist? " \
+        "One who, choosing, accepts the responsibility of choice."
+    if exists('RULES.md'):
+        with open('RULES.md') as f:
+            rules = f.read()
+    await ctx.message.channel.send(rules)
 
 
 @fungiforme.command()
