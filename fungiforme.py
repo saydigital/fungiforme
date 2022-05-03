@@ -5,6 +5,7 @@ from os.path import exists
 import configparser
 from datetime import datetime, timedelta
 from discord.ext import commands
+from discord import Embed, Color
 
 
 config = configparser.ConfigParser()
@@ -45,7 +46,7 @@ async def winner(ctx, date=None, start=None, end=None):
     if not end:
         end = HOUR_END
     channel = fungiforme.get_channel(CHANNEL_ID)
-    await ctx.message.channel.send('Let me check...!')
+    await ctx.message.channel.send('Let me check...')
     autovote_users = []
     gifs = {}
     after_date = datetime.strptime(
@@ -66,26 +67,58 @@ async def winner(ctx, date=None, start=None, end=None):
                 and message.embeds[0].type == 'gifv' \
                 and message.reactions:
             message_reaction = 0
+            voted_by = []
             for reaction in message.reactions:
                 users = await reaction.users().flatten()
                 if message.author in users:
                     autovote_users.append(message.author)
                 else:
                     message_reaction += len(users)
+                    voted_by.extend([user for user in users])
             if message_reaction >= MINIMUM_GIF_REACTIONS:
-                gifs[message] = message_reaction
+                gifs[message] = {
+                    "reactions": message_reaction,
+                    "users": voted_by,
+                    }
     if gifs:
         gifs = dict(sorted(
             gifs.items(),
-            key=lambda item: item[1],
+            key=lambda item: item[1]["reactions"],
             reverse=True))
-    winner_message = [f'Winner(s) for Fun-Gif-Orme {date} {start} - {end}', '']
+    winner_points = 0
+    user_showed = []
     for message in gifs:
-        tmp_winner = ' | '.join([
-            str(gifs[message]), message.author.name, message.jump_url])
-        winner_message.append(tmp_winner)
-    winner_message = '\n'.join(winner_message)
-    await ctx.message.channel.send(winner_message)
+        if message.author in user_showed:
+            continue
+        points = gifs[message]["reactions"]
+        if points >= winner_points:
+            winner_points = points
+            color = Color.gold()
+        else:
+            color = Color.blue()
+        original_message = await channel.fetch_message(
+            message.reference.message_id)
+        voted_by = ', '.join([user.name for user in gifs[message]["users"]])
+        embedVar = Embed(
+            title=f"{str(points)} points",
+            description=f"Voted by *{voted_by}*",
+            color=color,
+            url=message.jump_url
+            )
+        embedVar.set_author(
+            name=message.author.display_name,
+            icon_url=message.author.avatar_url,
+            )
+        embedVar.set_thumbnail(url=message.embeds[0].thumbnail.url)
+        embedVar.add_field(
+            name="As reply to",
+            value=f"{original_message.content}\n"
+            f"- {original_message.author.name} -",
+            inline=True,
+            )
+        user_showed.append(message.author)
+        await ctx.message.channel.send(embed=embedVar)
+    await ctx.message.channel.send('Done!')
 
 
 fungiforme.run(TOKEN)
