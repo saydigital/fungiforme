@@ -32,7 +32,7 @@ async def winner(ctx, date=None, start=None, end=None):
     if not end:
         end = HOUR_END
     channel = fungiforme.get_channel(CHANNEL_ID)
-    await channel.send('Let me check...')
+    await ctx.message.channel.send('Let me check...!')
     autovote_users = []
     gifs = {}
     after_date = datetime.strptime(
@@ -72,7 +72,7 @@ async def winner(ctx, date=None, start=None, end=None):
             str(gifs[message]), message.author.name, message.jump_url])
         winner_message.append(tmp_winner)
     winner_message = '\n'.join(winner_message)
-    await channel.send(winner_message)
+    await ctx.message.channel.send(winner_message)
 
 
 fungiforme.run(TOKEN)
