@@ -14,6 +14,7 @@ config.read('fungiforme.ini')
 
 TOKEN = config['DISCORD']['Token']
 CHANNEL_ID = config['DISCORD'].getint('Channel')
+VALID_EMOJI = config['FUNGIFORME'].get('ValidEmoji', '')
 MINIMUM_GIF_REACTIONS = config['FUNGIFORME'].getint('MinimumGifReactions')
 DATETIME_FORMAT = config['DATE']['DatetimeFormat']
 DATE_FORMAT = config['DATE']['DateFormat']
@@ -69,6 +70,9 @@ async def winner(ctx, date=None, start=None, end=None):
             message_reaction = 0
             voted_by = []
             for reaction in message.reactions:
+                # If a valid emoji is defined, use it to filter reactions
+                if VALID_EMOJI and reaction.emoji != VALID_EMOJI:
+                    continue
                 users = await reaction.users().flatten()
                 if message.author in users:
                     autovote_users.append(message.author)
