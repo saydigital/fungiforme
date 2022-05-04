@@ -6,6 +6,8 @@ Token = Test of Token
 Channel = 0000000099999999
 
 [FUNGIFORME]
+# If defined, only this reaction will be calculated to sum the points
+# ValidEmoji = 🍄
 MinimumGifReactions = 2
 # Free list of points to assign to users based on GIF ranking.
 # Fungiform keep them dinamically
