@@ -26,6 +26,45 @@ TIMEZONE_HOURS_DELAY = config['DATE'].getint('TimezoneHoursDelay')
 fungiforme = commands.Bot(command_prefix='!')
 
 
+def is_message_gif(message):
+    if message.embeds \
+            and message.embeds[0].type == 'gifv' \
+            and message.reactions:
+        return True
+    return False
+
+
+@fungiforme.event
+async def on_raw_reaction_remove(payload):
+    if VALID_EMOJI and payload.emoji.name == VALID_EMOJI \
+            and payload.channel_id == CHANNEL_ID:
+        channel = fungiforme.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        if is_message_gif(message):
+            date = datetime.today().strftime(DATE_FORMAT)
+            after_date = datetime.strptime(
+                f'{date} {HOUR_START}', DATETIME_FORMAT
+                ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
+            before_date = datetime.strptime(
+                f'{date} {HOUR_END}', DATETIME_FORMAT
+                ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
+            if after_date <= message.created_at <= before_date:
+                user = await fungiforme.fetch_user(payload.user_id)
+                embedVar = Embed(
+                    title=f"Warning! {user.name} has been warned!",
+                    description=\
+                    f"You were caught removing your vote from a valid GIF. "
+                    f"Very soon this behavior will be banned.",
+                    color=Color.red(),
+                    url=message.jump_url
+                    )
+                embedVar.set_author(
+                    name=user.display_name,
+                    icon_url=user.avatar_url,
+                    )
+                await channel.send(embed=embedVar)
+
+
 @fungiforme.command()
 async def rules(ctx):
     rules = \
@@ -64,9 +103,7 @@ async def winner(ctx, date=None, start=None, end=None):
         ).flatten()
     for message in messages:
         # Get only messages with GIF and reactions
-        if message.embeds \
-                and message.embeds[0].type == 'gifv' \
-                and message.reactions:
+        if is_message_gif(message):
             message_reaction = 0
             voted_by = []
             for reaction in message.reactions:
