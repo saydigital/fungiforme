@@ -17,6 +17,9 @@ PointsForPosition2 = 0.3
 # Free list of points to assign to users based on original message ranking.
 # Fungiform keep them dinamically
 PointsForOriginalMessagePosition1 = 0.2
+MedalPosition1 = 🥇
+MedalPosition2 = 🥈
+MedalPosition3 = 🥉
 
 [DATE]
 DatetimeFormat = %%Y-%%m-%%d %%H:%%M:%%S

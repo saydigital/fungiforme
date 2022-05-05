@@ -185,6 +185,19 @@ async def winner(ctx, date=None, start=None, end=None):
             inline=True,
             )
         user_showed.append(message.author)
+        # Add medal reaction
+        if vote_position > 0:
+            medal = config['FUNGIFORME'].get(
+                f'MedalPosition{vote_position}', '')
+            if medal:
+                # Discord has a limit for the reaction on every message.
+                # If we add more than the limit, the bot will not be able
+                # to add the medal.
+                try:
+                    await message.add_reaction(medal)
+                except:
+                    # TODO Log error
+                    pass
         await response_channel.send(embed=embedVar)
     await response_channel.send('Done!')
 
