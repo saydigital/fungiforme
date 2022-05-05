@@ -103,7 +103,7 @@ async def winner(ctx, date=None, start=None, end=None):
         f'{date} {HOUR_END}', DATETIME_FORMAT
         ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
     messages = await contest_channel.history(
-        limit=200,
+        limit=500,
         oldest_first=False,
         after=after_date,
         before=before_date,
