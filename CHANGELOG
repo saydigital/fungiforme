@@ -1,0 +1,12 @@
+# Fungiforme
+
+## [1.0.0] - 2022-05-05
+
+### Added
+
+- `winner` command
+- `rules` command
+- Configurable data for Discord, Fungiforme and data
+- Configurable rules
+- Check if an user remove a vote
+- Add a medal on message based on position and configuration
