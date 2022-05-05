@@ -13,6 +13,7 @@ config.read('fungiforme.ini')
 
 
 TOKEN = config['DISCORD']['Token']
+COMMAND_PREFIX = config['DISCORD']['CommandPrefix']
 CHANNEL_ID = config['DISCORD'].getint('Channel')
 VALID_EMOJI = config['FUNGIFORME'].get('ValidEmoji', '')
 MINIMUM_GIF_REACTIONS = config['FUNGIFORME'].getint('MinimumGifReactions')
@@ -23,7 +24,7 @@ HOUR_END = config['DATE']['HourEnd']
 TIMEZONE_HOURS_DELAY = config['DATE'].getint('TimezoneHoursDelay')
 
 
-fungiforme = commands.Bot(command_prefix='!')
+fungiforme = commands.Bot(command_prefix=COMMAND_PREFIX)
 
 
 def is_message_gif(message):
