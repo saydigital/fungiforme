@@ -5,7 +5,7 @@ from os.path import exists
 import configparser
 from datetime import datetime, timedelta
 from discord.ext import commands
-from discord import Embed, Color
+from discord import Embed, Color, File as DiscordFile
 
 
 config = configparser.ConfigParser()
@@ -32,6 +32,10 @@ def is_message_gif(message):
             and message.reactions:
         return True
     return False
+
+
+async def send_gif(channel, gif):
+    await channel.send(file=DiscordFile(f'assets/gifs/{gif}.gif'))
 
 
 @fungiforme.event
@@ -85,8 +89,10 @@ async def winner(ctx, date=None, start=None, end=None):
         start = HOUR_START
     if not end:
         end = HOUR_END
-    channel = fungiforme.get_channel(CHANNEL_ID)
-    await ctx.message.channel.send('Let me check...')
+    contest_channel = fungiforme.get_channel(CHANNEL_ID)
+    response_channel = ctx.message.channel
+    await response_channel.send('Let me check...')
+    await send_gif(response_channel, 'confused')
     autovote_users = []
     gifs = {}
     after_date = datetime.strptime(
@@ -95,7 +101,7 @@ async def winner(ctx, date=None, start=None, end=None):
     before_date = datetime.strptime(
         f'{date} {HOUR_END}', DATETIME_FORMAT
         ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
-    messages = await channel.history(
+    messages = await contest_channel.history(
         limit=200,
         oldest_first=False,
         after=after_date,
@@ -145,7 +151,7 @@ async def winner(ctx, date=None, start=None, end=None):
         else:
             color = default_color
             vote_position = 0
-        original_message = await channel.fetch_message(
+        original_message = await contest_channel.fetch_message(
             message.reference.message_id)
         voted_by = ', '.join([user.name for user in gifs[message]["users"]])
         gif_points = config['FUNGIFORME'].getfloat(
@@ -178,8 +184,8 @@ async def winner(ctx, date=None, start=None, end=None):
             inline=True,
             )
         user_showed.append(message.author)
-        await ctx.message.channel.send(embed=embedVar)
-    await ctx.message.channel.send('Done!')
+        await response_channel.send(embed=embedVar)
+    await response_channel.send('Done!')
 
 
 fungiforme.run(TOKEN)
