@@ -9,7 +9,7 @@ from discord import Embed, Color, File as DiscordFile
 
 
 config = configparser.ConfigParser()
-config.read('fungiforme.ini')
+config.read('fungiforme.ini', encoding='UTF-8')
 
 
 TOKEN = config['DISCORD']['Token']
@@ -34,6 +34,29 @@ def is_message_gif(message):
         return True
     return False
 
+def has_gif_attachment(message):
+    return message.attachments \
+        and message.attachments[0].filename.lower().endswith('.gif')
+
+def is_valid_reply_gif(message, original_message):
+    if message.embeds \
+            and message.embeds[0].type == 'gifv' \
+            and message.reference \
+            and original_message \
+            and message.reference.message_id == original_message.id:
+        if (original_message.embeds \
+                and original_message.embeds[0].type == 'gifv') \
+            or has_gif_attachment(original_message):
+            # users cannot reply to another GIF
+            return False
+        elif original_message.author == message.author:
+            # users cannot reply to their own messages
+            return False
+        else:
+            return True
+    else:
+        return False
+        
 
 async def send_gif(channel, gif):
     await channel.send(file=DiscordFile(f'assets/gifs/{gif}.gif'))
@@ -68,6 +91,43 @@ async def on_raw_reaction_remove(payload):
                     icon_url=user.avatar_url,
                     )
                 await channel.send(embed=embedVar)
+
+
+@fungiforme.event
+async def on_message(message):
+    date = datetime.today().strftime(DATE_FORMAT)
+    after_date = datetime.strptime(
+        f'{date} {HOUR_START}', DATETIME_FORMAT
+        ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
+    before_date = datetime.strptime(
+        f'{date} {HOUR_END}', DATETIME_FORMAT
+        ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
+    original_message = None
+    if message.reference:
+        original_message = await message.channel.fetch_message(
+            message.reference.message_id)
+    if not message.author.bot \
+        and message.channel.id == CHANNEL_ID \
+        and after_date <= message.created_at <= before_date \
+        and not is_valid_reply_gif(message, original_message) \
+        and ((message.embeds \
+                and message.embeds[0].type == 'gifv') \
+                or has_gif_attachment(message)):
+        embedVar = Embed(
+            title=f"Warning! {message.author.name} has been warned!",
+            description=\
+            f"Your GIF wasn't a reply to another user's text message.\n"
+            f"Any reaction added to this GIF will be ignored.",
+            color=Color.red(),
+            url=message.jump_url
+            )
+        embedVar.set_author(
+            name=message.author.display_name,
+            icon_url=message.author.avatar_url,
+            )
+        await message.channel.send(embed=embedVar)
+    else:
+        await fungiforme.process_commands(message)
 
 
 @fungiforme.command()
@@ -110,7 +170,11 @@ async def winner(ctx, date=None, start=None, end=None):
         ).flatten()
     for message in messages:
         # Get only messages with GIF and reactions
-        if is_message_gif(message):
+        original_message = None
+        if message.reference:
+            original_message = await contest_channel.fetch_message(
+                message.reference.message_id)
+        if is_message_gif(message) and is_valid_reply_gif(message, original_message):
             message_reaction = 0
             voted_by = []
             for reaction in message.reactions:
@@ -127,6 +191,7 @@ async def winner(ctx, date=None, start=None, end=None):
                 gifs[message] = {
                     "reactions": message_reaction,
                     "users": voted_by,
+                    "original_message": original_message,
                     }
     if gifs:
         gifs = dict(sorted(
@@ -152,8 +217,7 @@ async def winner(ctx, date=None, start=None, end=None):
         else:
             color = default_color
             vote_position = 0
-        original_message = await contest_channel.fetch_message(
-            message.reference.message_id)
+        original_message = gifs[message]["original_message"]
         voted_by = ', '.join([user.name for user in gifs[message]["users"]])
         gif_points = config['FUNGIFORME'].getfloat(
             f'PointsForPosition{vote_position}', 0)
