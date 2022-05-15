@@ -1,2 +1,9 @@
 fungiforme.ini
 RULES.md
+*.log
+logs/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class

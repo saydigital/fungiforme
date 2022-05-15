@@ -10,3 +10,9 @@
 - Configurable rules
 - Check if an user remove a vote
 - Add a medal on message based on position and configuration
+
+## [1.0.1] - 2022-05-15
+
+### Added
+
+- logging
