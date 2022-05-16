@@ -27,3 +27,23 @@ DateFormat = %%Y-%%m-%%d
 HourStart = 14:00:00
 HourEnd = 15:00:00
 TimezoneHoursDelay = 2
+
+[LOGGING]
+level = info
+format = %%(asctime)s %%(process)d %%(levelname)s ? %%(name)s: %%(message)s
+# if specified, a log file is used.
+filepath = logs/fungiforme.log
+# determines log rotation policy. possible values are: size, time
+# If omitted but 'filepath' is specified, log file is not rotated.
+# Omit this to handle log rotation with system tools like 'newsyslog' and 'logrotate'
+logRotate = time
+# If 'logRotate' is set to 'size', specify the max file width (in bytes) aftr that 
+# log file must be rotated
+maxBytes = 100000000
+# max number of rotated log files
+backupCount = 10
+# If 'logRotate' is set to 'time', specify when a file must be rotated. 
+# See https://docs.python.org/3.7/library/logging.handlers.html#timedrotatingfilehandler for possible values
+when = D
+# If 'logRotate' is set to 'time', specify rotation interval. 
+interval = 1

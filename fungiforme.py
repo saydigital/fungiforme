@@ -6,11 +6,15 @@ import configparser
 from datetime import datetime, timedelta
 from discord.ext import commands
 from discord import Embed, Color, File as DiscordFile
+import logsetup
+import logging
 
 
 config = configparser.ConfigParser()
 config.read('fungiforme.ini', encoding='UTF-8')
 
+logsetup.setup(config)
+logger = logging.getLogger('fungiforme')
 
 TOKEN = config['DISCORD']['Token']
 COMMAND_PREFIX = config['DISCORD']['CommandPrefix']
