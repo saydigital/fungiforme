@@ -38,19 +38,49 @@ def is_message_gif(message):
         return True
     return False
 
-def has_gif_attachment(message):
-    return message.attachments \
-        and message.attachments[0].filename.lower().endswith('.gif')
+
+def has_gif_element(message):
+    if message.embeds and message.embeds[0].type == 'gifv':
+        has_embed_gif = True
+    else:
+        has_embed_gif = False
+    
+    if message.attachments and message.attachments[0].filename.lower().endswith('.gif'):
+        has_attachment_gif = True
+    else:
+        has_attachment_gif = False
+
+    return has_embed_gif or has_attachment_gif
+
+
+def get_game_time_interval(date=None, start_hour=None, end_hour=None):
+    if not date:
+        date = datetime.today().strftime(DATE_FORMAT)
+    if not start_hour:
+        start_hour = HOUR_START
+    if not end_hour:
+        end_hour = HOUR_END
+    
+    start_datetime = datetime.strptime(
+        f'{date} {start_hour}', DATETIME_FORMAT
+        ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
+    
+    end_datetime = datetime.strptime(
+        f'{date} {end_hour}', DATETIME_FORMAT
+        ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
+
+    return start_datetime, end_datetime
+
+
+today_game_start, today_game_end = get_game_time_interval()
+
 
 def is_valid_reply_gif(message, original_message):
-    if message.embeds \
-            and message.embeds[0].type == 'gifv' \
+    if has_gif_element(message) \
             and message.reference \
             and original_message \
             and message.reference.message_id == original_message.id:
-        if (original_message.embeds \
-                and original_message.embeds[0].type == 'gifv') \
-            or has_gif_attachment(original_message):
+        if has_gif_element(original_message):
             # users cannot reply to another GIF
             return False
         elif original_message.author == message.author:
@@ -99,28 +129,22 @@ async def on_raw_reaction_remove(payload):
 
 @fungiforme.event
 async def on_message(message):
-    date = datetime.today().strftime(DATE_FORMAT)
-    after_date = datetime.strptime(
-        f'{date} {HOUR_START}', DATETIME_FORMAT
-        ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
-    before_date = datetime.strptime(
-        f'{date} {HOUR_END}', DATETIME_FORMAT
-        ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
     original_message = None
     if message.reference:
         original_message = await message.channel.fetch_message(
             message.reference.message_id)
     if not message.author.bot \
         and message.channel.id == CHANNEL_ID \
-        and after_date <= message.created_at <= before_date \
-        and not is_valid_reply_gif(message, original_message) \
-        and ((message.embeds \
-                and message.embeds[0].type == 'gifv') \
-                or has_gif_attachment(message)):
+        and today_game_start <= message.created_at <= today_game_end \
+        and (
+            not is_valid_reply_gif(message, original_message) or 
+            original_message.created_at < today_game_start
+        ):
         embedVar = Embed(
             title=f"Warning! {message.author.name} has been warned!",
             description=\
-            f"Your GIF wasn't a reply to another user's text message.\n"
+            f"Your GIF wasn't a valid reply to another user's text message " 
+            f"of today's game.\n"
             f"Any reaction added to this GIF will be ignored.",
             color=Color.red(),
             url=message.jump_url
@@ -161,14 +185,14 @@ async def winner(ctx, date=None, start=None, end=None):
     autovote_users = []
     gifs = {}
     after_date = datetime.strptime(
-        f'{date} {HOUR_START}', DATETIME_FORMAT
+        f'{date} {start}', DATETIME_FORMAT
         ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
     before_date = datetime.strptime(
-        f'{date} {HOUR_END}', DATETIME_FORMAT
+        f'{date} {end}', DATETIME_FORMAT
         ) - timedelta(hours=TIMEZONE_HOURS_DELAY)
     messages = await contest_channel.history(
         limit=500,
-        oldest_first=False,
+        oldest_first=True,
         after=after_date,
         before=before_date,
         ).flatten()
@@ -178,7 +202,9 @@ async def winner(ctx, date=None, start=None, end=None):
         if message.reference:
             original_message = await contest_channel.fetch_message(
                 message.reference.message_id)
-        if is_message_gif(message) and is_valid_reply_gif(message, original_message):
+        if is_message_gif(message) \
+            and is_valid_reply_gif(message, original_message) \
+            and after_date <= original_message.created_at <= before_date:
             message_reaction = 0
             voted_by = []
             for reaction in message.reactions:
