@@ -72,9 +72,6 @@ def get_game_time_interval(date=None, start_hour=None, end_hour=None):
     return start_datetime, end_datetime
 
 
-today_game_start, today_game_end = get_game_time_interval()
-
-
 def is_valid_reply_gif(message, original_message):
     if has_gif_element(message) \
             and message.reference \
@@ -129,6 +126,7 @@ async def on_raw_reaction_remove(payload):
 
 @fungiforme.event
 async def on_message(message):
+    today_game_start, today_game_end = get_game_time_interval()
     original_message = None
     if message.reference:
         original_message = await message.channel.fetch_message(
