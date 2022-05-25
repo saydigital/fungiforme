@@ -131,10 +131,10 @@ async def on_message(message):
     if message.reference:
         original_message = await message.channel.fetch_message(
             message.reference.message_id)
-    if not message.author.bot \
-        and message.channel.id == CHANNEL_ID \
-        and today_game_start <= message.created_at <= today_game_end \
+    if not message.author.bot and message.channel.id == CHANNEL_ID \
+        and has_gif_element(message) \
         and (
+            not today_game_start <= message.created_at <= today_game_end or
             not is_valid_reply_gif(message, original_message) or 
             original_message.created_at < today_game_start
         ):
