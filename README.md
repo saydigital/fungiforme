@@ -30,7 +30,7 @@ It is recommended to run this bot as a service so as it is always available, to 
 * Create a fungiforme service user and group, set the homedir to the directory where you cloned fungiforme (i.e. /opt/fungiforme):
 ```
 # groupadd fungiforme
-# useradd --system --home-dir "/opt/fungiforme" --user-group \
+# useradd --system --home-dir "/opt/fungiforme" \
 --groups fungiforme --shell /bin/false fungiforme
 ```
 * Fix permissions on the cloned fungiforme directory:
