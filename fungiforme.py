@@ -31,14 +31,6 @@ TIMEZONE_HOURS_DELAY = config['DATE'].getint('TimezoneHoursDelay')
 fungiforme = commands.Bot(command_prefix=COMMAND_PREFIX)
 
 
-def is_message_gif(message):
-    if message.embeds \
-            and message.embeds[0].type == 'gifv' \
-            and message.reactions:
-        return True
-    return False
-
-
 def has_gif_element(message):
     if message.embeds and message.embeds[0].type == 'gifv':
         has_embed_gif = True
@@ -51,6 +43,12 @@ def has_gif_element(message):
         has_attachment_gif = False
 
     return has_embed_gif or has_attachment_gif
+
+
+def is_message_gif(message):
+    if has_gif_element(message) and message.reactions:
+        return True
+    return False
 
 
 def get_game_time_interval(date=None, start_hour=None, end_hour=None):
@@ -133,8 +131,8 @@ async def on_message(message):
             message.reference.message_id)
     if not message.author.bot and message.channel.id == CHANNEL_ID \
         and has_gif_element(message) \
+        and today_game_start <= message.created_at < today_game_end \
         and (
-            not today_game_start <= message.created_at <= today_game_end or
             not is_valid_reply_gif(message, original_message) or 
             original_message.created_at < today_game_start
         ):
@@ -208,7 +206,7 @@ async def winner(ctx, date=None, start=None, end=None):
                 original_message = None
         if is_message_gif(message) \
             and is_valid_reply_gif(message, original_message) \
-            and after_date <= original_message.created_at <= before_date:
+            and after_date <= original_message.created_at < before_date:
             message_reaction = 0
             voted_by = []
             for reaction in message.reactions:
