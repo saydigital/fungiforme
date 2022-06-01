@@ -87,6 +87,15 @@ def is_valid_reply_gif(message, original_message):
         return False
         
 
+def get_message_gif_url(message):
+    if message.embeds and message.embeds[0].type == 'gifv':
+        return message.embeds[0].thumbnail.url
+    elif message.attachments and message.attachments[0].filename.lower().endswith('.gif'):
+        return message.attachments[0].url
+    else:
+        return Embed.Empty
+
+
 async def send_gif(channel, gif):
     await channel.send(file=DiscordFile(f'assets/gifs/{gif}.gif'))
 
@@ -273,7 +282,7 @@ async def winner(ctx, date=None, start=None, end=None):
             name=message.author.display_name,
             icon_url=message.author.avatar_url,
             )
-        embedVar.set_thumbnail(url=message.embeds[0].thumbnail.url)
+        embedVar.set_thumbnail(url=get_message_gif_url(message))
         embedVar.add_field(
             name="As reply to",
             value=f"{original_message.content}\n"
