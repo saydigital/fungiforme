@@ -1,5 +1,18 @@
 # Fungiforme
 
+
+## [1.0.2] - 2022-06-07
+
+### Fixed
+
+- Reply to a deleted message generate a 404 error in API
+
+## [1.0.1] - 2022-05-15
+
+### Added
+
+- logging
+
 ## [1.0.0] - 2022-05-05
 
 ### Added
@@ -10,9 +23,3 @@
 - Configurable rules
 - Check if an user remove a vote
 - Add a medal on message based on position and configuration
-
-## [1.0.1] - 2022-05-15
-
-### Added
-
-- logging
