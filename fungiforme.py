@@ -45,12 +45,6 @@ def has_gif_element(message):
     return has_embed_gif or has_attachment_gif
 
 
-def is_message_gif(message):
-    if has_gif_element(message) and message.reactions:
-        return True
-    return False
-
-
 def get_game_time_interval(date=None, start_hour=None, end_hour=None):
     if not date:
         date = datetime.today().strftime(DATE_FORMAT)
@@ -87,6 +81,13 @@ def is_valid_reply_gif(message, original_message):
         return False
         
 
+def is_valid_gif_message(message, original_message):
+    if is_valid_reply_gif(message, original_message) and message.reactions:
+        return True
+    else:
+        return False
+
+
 def get_message_gif_url(message):
     if message.embeds and message.embeds[0].type == 'gifv':
         return message.embeds[0].thumbnail.url
@@ -94,6 +95,20 @@ def get_message_gif_url(message):
         return message.attachments[0].url
     else:
         return Embed.Empty
+
+
+async def get_original_message(channel, message):
+    original_message = None
+    if message.reference:
+        # If user replies to another user's message,
+        # and the original message is deleted,
+        # Discord doesn't show the message state.
+        try:
+            original_message = await channel.fetch_message(
+                message.reference.message_id)
+        except:
+            original_message = None
+    return original_message
 
 
 async def send_gif(channel, gif):
@@ -106,7 +121,8 @@ async def on_raw_reaction_remove(payload):
             and payload.channel_id == CHANNEL_ID:
         channel = fungiforme.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
-        if is_message_gif(message):
+        original_message = await get_original_message(channel, message)
+        if is_valid_reply_gif(message, original_message):
             date = datetime.today().strftime(DATE_FORMAT)
             after_date = datetime.strptime(
                 f'{date} {HOUR_START}', DATETIME_FORMAT
@@ -203,18 +219,8 @@ async def winner(ctx, date=None, start=None, end=None):
         ).flatten()
     for message in messages:
         # Get only messages with GIF and reactions
-        original_message = None
-        if message.reference:
-            # If user replies to another user's message,
-            # and the original message is deleted,
-            # Discord doesn't show the message state.
-            try:
-                original_message = await contest_channel.fetch_message(
-                    message.reference.message_id)
-            except:
-                original_message = None
-        if is_message_gif(message) \
-            and is_valid_reply_gif(message, original_message) \
+        original_message = await get_original_message(contest_channel, message)
+        if is_valid_gif_message(message, original_message) \
             and after_date <= original_message.created_at < before_date:
             message_reaction = 0
             voted_by = []
