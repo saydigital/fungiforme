@@ -198,8 +198,14 @@ async def winner(ctx, date=None, start=None, end=None):
         # Get only messages with GIF and reactions
         original_message = None
         if message.reference:
-            original_message = await contest_channel.fetch_message(
-                message.reference.message_id)
+            # If user replies to another user's message,
+            # and the original message is deleted,
+            # Discord doesn't show the message state.
+            try:
+                original_message = await contest_channel.fetch_message(
+                    message.reference.message_id)
+            except:
+                original_message = None
         if is_message_gif(message) \
             and is_valid_reply_gif(message, original_message) \
             and after_date <= original_message.created_at <= before_date:
