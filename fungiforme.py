@@ -1,5 +1,5 @@
-# Invite URL
-# https://discord.com/api/oauth2/authorize?client_id=964498743451856938&permissions=2147697728&scope=bot
+# Copyright 2022-TODAY Rapsodoo Italia S.r.L. (www.rapsodoo.com)
+# # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl)
 
 from os.path import exists
 import configparser
@@ -8,6 +8,8 @@ from discord.ext import commands
 from discord import Embed, Color, File as DiscordFile
 import logsetup
 import logging
+from urllib import parse
+from discord_buttons_plugin import ButtonsClient, ActionRow, Button, ButtonType
 
 
 config = configparser.ConfigParser()
@@ -27,16 +29,11 @@ HOUR_START = config['DATE']['HourStart']
 HOUR_END = config['DATE']['HourEnd']
 TIMEZONE_HOURS_DELAY = config['DATE'].getint('TimezoneHoursDelay')
 
+ISSUE_URL = "https://github.com/saydigital/fungiforme/issues/new?"
+
 
 fungiforme = commands.Bot(command_prefix=COMMAND_PREFIX)
-
-
-def is_message_gif(message):
-    if message.embeds \
-            and message.embeds[0].type == 'gifv' \
-            and message.reactions:
-        return True
-    return False
+buttons = ButtonsClient(fungiforme)
 
 
 def has_gif_element(message):
@@ -89,6 +86,36 @@ def is_valid_reply_gif(message, original_message):
         return False
         
 
+def is_valid_gif_message(message, original_message):
+    if is_valid_reply_gif(message, original_message) and message.reactions:
+        return True
+    else:
+        return False
+
+
+def get_message_gif_url(message):
+    if message.embeds and message.embeds[0].type == 'gifv':
+        return message.embeds[0].thumbnail.url
+    elif message.attachments and message.attachments[0].filename.lower().endswith('.gif'):
+        return message.attachments[0].url
+    else:
+        return Embed.Empty
+
+
+async def get_original_message(channel, message):
+    original_message = None
+    if message.reference:
+        # If user replies to another user's message,
+        # and the original message is deleted,
+        # Discord doesn't show the message state.
+        try:
+            original_message = await channel.fetch_message(
+                message.reference.message_id)
+        except:
+            original_message = None
+    return original_message
+
+
 async def send_gif(channel, gif):
     await channel.send(file=DiscordFile(f'assets/gifs/{gif}.gif'))
 
@@ -99,7 +126,8 @@ async def on_raw_reaction_remove(payload):
             and payload.channel_id == CHANNEL_ID:
         channel = fungiforme.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
-        if is_message_gif(message):
+        original_message = await get_original_message(channel, message)
+        if is_valid_reply_gif(message, original_message):
             date = datetime.today().strftime(DATE_FORMAT)
             after_date = datetime.strptime(
                 f'{date} {HOUR_START}', DATETIME_FORMAT
@@ -133,8 +161,8 @@ async def on_message(message):
             message.reference.message_id)
     if not message.author.bot and message.channel.id == CHANNEL_ID \
         and has_gif_element(message) \
+        and today_game_start <= message.created_at < today_game_end \
         and (
-            not today_game_start <= message.created_at <= today_game_end or
             not is_valid_reply_gif(message, original_message) or 
             original_message.created_at < today_game_start
         ):
@@ -154,6 +182,53 @@ async def on_message(message):
         await message.channel.send(embed=embedVar)
     else:
         await fungiforme.process_commands(message)
+
+
+@fungiforme.command()
+async def issue(ctx):
+    message = ctx.message
+    original_message = None
+    if message.reference:
+        # If user replies to another user's message,
+        # and the original message is deleted,
+        # Discord doesn't show the message state.
+        try:
+            original_message = await ctx.message.channel.fetch_message(
+                message.reference.message_id)
+        except:
+            original_message = None
+    if original_message:
+        data = {
+            "id": original_message.id,
+            "channel": original_message.channel.id,
+            "author": original_message.author.id,
+            "content": original_message.content,
+            "created_at": original_message.created_at.isoformat(),
+            "HOUR_START": HOUR_START,
+            "HOUR_END": HOUR_END,
+            "TIMEZONE_HOURS_DELAY": TIMEZONE_HOURS_DELAY,
+        }
+        params = {
+            "labels": "bug",
+            "title": f"Bug on message {original_message.id}",
+            "body": data
+        }
+        url_params = parse.urlencode(params)
+        await buttons.send(
+            channel = ctx.message.channel.id,
+            components = [
+                ActionRow([
+                    Button(
+                        label="Create the issue on github",
+                        style=ButtonType().Link,
+                        url=f"{ISSUE_URL}{url_params}"
+                    )
+                ])
+            ]
+        )
+    else:
+        await message.reply(
+            "You need to reply to a message to create an issue.")
 
 
 @fungiforme.command()
@@ -196,19 +271,9 @@ async def winner(ctx, date=None, start=None, end=None):
         ).flatten()
     for message in messages:
         # Get only messages with GIF and reactions
-        original_message = None
-        if message.reference:
-            # If user replies to another user's message,
-            # and the original message is deleted,
-            # Discord doesn't show the message state.
-            try:
-                original_message = await contest_channel.fetch_message(
-                    message.reference.message_id)
-            except:
-                original_message = None
-        if is_message_gif(message) \
-            and is_valid_reply_gif(message, original_message) \
-            and after_date <= original_message.created_at <= before_date:
+        original_message = await get_original_message(contest_channel, message)
+        if is_valid_gif_message(message, original_message) \
+            and after_date <= original_message.created_at < before_date:
             message_reaction = 0
             voted_by = []
             for reaction in message.reactions:
@@ -276,7 +341,7 @@ async def winner(ctx, date=None, start=None, end=None):
             name=message.author.display_name,
             icon_url=message.author.avatar_url,
             )
-        embedVar.set_thumbnail(url=message.embeds[0].thumbnail.url)
+        embedVar.set_thumbnail(url=get_message_gif_url(message))
         embedVar.add_field(
             name="As reply to",
             value=f"{original_message.content}\n"
