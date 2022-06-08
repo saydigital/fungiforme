@@ -1,5 +1,11 @@
 # Fungiforme
 
+## [1.1.1] - 2022-06-08
+
+### Changed
+
+- Command `winner` show only players with valid points
+
 ## [1.1.0] - 2022-06-07
 
 ### Added
