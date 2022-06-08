@@ -31,14 +31,6 @@ TIMEZONE_HOURS_DELAY = config['DATE'].getint('TimezoneHoursDelay')
 fungiforme = commands.Bot(command_prefix=COMMAND_PREFIX)
 
 
-def is_message_gif(message):
-    if message.embeds \
-            and message.embeds[0].type == 'gifv' \
-            and message.reactions:
-        return True
-    return False
-
-
 def has_gif_element(message):
     if message.embeds and message.embeds[0].type == 'gifv':
         has_embed_gif = True
@@ -89,6 +81,36 @@ def is_valid_reply_gif(message, original_message):
         return False
         
 
+def is_valid_gif_message(message, original_message):
+    if is_valid_reply_gif(message, original_message) and message.reactions:
+        return True
+    else:
+        return False
+
+
+def get_message_gif_url(message):
+    if message.embeds and message.embeds[0].type == 'gifv':
+        return message.embeds[0].thumbnail.url
+    elif message.attachments and message.attachments[0].filename.lower().endswith('.gif'):
+        return message.attachments[0].url
+    else:
+        return Embed.Empty
+
+
+async def get_original_message(channel, message):
+    original_message = None
+    if message.reference:
+        # If user replies to another user's message,
+        # and the original message is deleted,
+        # Discord doesn't show the message state.
+        try:
+            original_message = await channel.fetch_message(
+                message.reference.message_id)
+        except:
+            original_message = None
+    return original_message
+
+
 async def send_gif(channel, gif):
     await channel.send(file=DiscordFile(f'assets/gifs/{gif}.gif'))
 
@@ -99,7 +121,8 @@ async def on_raw_reaction_remove(payload):
             and payload.channel_id == CHANNEL_ID:
         channel = fungiforme.get_channel(payload.channel_id)
         message = await channel.fetch_message(payload.message_id)
-        if is_message_gif(message):
+        original_message = await get_original_message(channel, message)
+        if is_valid_reply_gif(message, original_message):
             date = datetime.today().strftime(DATE_FORMAT)
             after_date = datetime.strptime(
                 f'{date} {HOUR_START}', DATETIME_FORMAT
@@ -133,8 +156,8 @@ async def on_message(message):
             message.reference.message_id)
     if not message.author.bot and message.channel.id == CHANNEL_ID \
         and has_gif_element(message) \
+        and today_game_start <= message.created_at < today_game_end \
         and (
-            not today_game_start <= message.created_at <= today_game_end or
             not is_valid_reply_gif(message, original_message) or 
             original_message.created_at < today_game_start
         ):
@@ -196,19 +219,9 @@ async def winner(ctx, date=None, start=None, end=None):
         ).flatten()
     for message in messages:
         # Get only messages with GIF and reactions
-        original_message = None
-        if message.reference:
-            # If user replies to another user's message,
-            # and the original message is deleted,
-            # Discord doesn't show the message state.
-            try:
-                original_message = await contest_channel.fetch_message(
-                    message.reference.message_id)
-            except:
-                original_message = None
-        if is_message_gif(message) \
-            and is_valid_reply_gif(message, original_message) \
-            and after_date <= original_message.created_at <= before_date:
+        original_message = await get_original_message(contest_channel, message)
+        if is_valid_gif_message(message, original_message) \
+            and after_date <= original_message.created_at < before_date:
             message_reaction = 0
             voted_by = []
             for reaction in message.reactions:
@@ -275,7 +288,7 @@ async def winner(ctx, date=None, start=None, end=None):
             name=message.author.display_name,
             icon_url=message.author.avatar_url,
             )
-        embedVar.set_thumbnail(url=message.embeds[0].thumbnail.url)
+        embedVar.set_thumbnail(url=get_message_gif_url(message))
         embedVar.add_field(
             name="As reply to",
             value=f"{original_message.content}\n"
