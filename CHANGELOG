@@ -1,5 +1,11 @@
 # Fungiforme
 
+## [1.1.0] - 2022-06-07
+
+### Added
+
+- Command `issue` to generate information to create issue on Github
+
 ## [1.0.3] - 2022-06-07
 
 ### Fixed

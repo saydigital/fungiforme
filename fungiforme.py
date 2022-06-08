@@ -1,5 +1,5 @@
-# Invite URL
-# https://discord.com/api/oauth2/authorize?client_id=964498743451856938&permissions=2147697728&scope=bot
+# Copyright 2022-TODAY Rapsodoo Italia S.r.L. (www.rapsodoo.com)
+# # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl)
 
 from os.path import exists
 import configparser
@@ -8,6 +8,8 @@ from discord.ext import commands
 from discord import Embed, Color, File as DiscordFile
 import logsetup
 import logging
+from urllib import parse
+from discord_buttons_plugin import ButtonsClient, ActionRow, Button, ButtonType
 
 
 config = configparser.ConfigParser()
@@ -27,8 +29,11 @@ HOUR_START = config['DATE']['HourStart']
 HOUR_END = config['DATE']['HourEnd']
 TIMEZONE_HOURS_DELAY = config['DATE'].getint('TimezoneHoursDelay')
 
+ISSUE_URL = "https://github.com/saydigital/fungiforme/issues/new?"
+
 
 fungiforme = commands.Bot(command_prefix=COMMAND_PREFIX)
+buttons = ButtonsClient(fungiforme)
 
 
 def has_gif_element(message):
@@ -177,6 +182,53 @@ async def on_message(message):
         await message.channel.send(embed=embedVar)
     else:
         await fungiforme.process_commands(message)
+
+
+@fungiforme.command()
+async def issue(ctx):
+    message = ctx.message
+    original_message = None
+    if message.reference:
+        # If user replies to another user's message,
+        # and the original message is deleted,
+        # Discord doesn't show the message state.
+        try:
+            original_message = await ctx.message.channel.fetch_message(
+                message.reference.message_id)
+        except:
+            original_message = None
+    if original_message:
+        data = {
+            "id": original_message.id,
+            "channel": original_message.channel.id,
+            "author": original_message.author.id,
+            "content": original_message.content,
+            "created_at": original_message.created_at.isoformat(),
+            "HOUR_START": HOUR_START,
+            "HOUR_END": HOUR_END,
+            "TIMEZONE_HOURS_DELAY": TIMEZONE_HOURS_DELAY,
+        }
+        params = {
+            "labels": "bug",
+            "title": f"Bug on message {original_message.id}",
+            "body": data
+        }
+        url_params = parse.urlencode(params)
+        await buttons.send(
+            channel = ctx.message.channel.id,
+            components = [
+                ActionRow([
+                    Button(
+                        label="Create the issue on github",
+                        style=ButtonType().Link,
+                        url=f"{ISSUE_URL}{url_params}"
+                    )
+                ])
+            ]
+        )
+    else:
+        await message.reply(
+            "You need to reply to a message to create an issue.")
 
 
 @fungiforme.command()
