@@ -320,10 +320,11 @@ async def winner(ctx, date=None, start=None, end=None):
         voted_by = ', '.join([user.name for user in gifs[message]["users"]])
         gif_points = config['FUNGIFORME'].getfloat(
             f'PointsForPosition{vote_position}', 0)
+        # Show only gifs with valid points
         if gif_points > 0:
             gif_points_message = f" (+{gif_points} points)"
         else:
-            gif_points_message = ""
+            continue
         message_points = config['FUNGIFORME'].getfloat(
             f'PointsForOriginalMessagePosition{vote_position}', 0)
         if message_points > 0:
@@ -362,7 +363,7 @@ async def winner(ctx, date=None, start=None, end=None):
                     # TODO Log error
                     pass
         await response_channel.send(embed=embedVar)
-    await response_channel.send('Done!')
+    await send_gif(response_channel, 'done')
 
 
 fungiforme.run(TOKEN)
