@@ -1,5 +1,13 @@
 # Fungiforme
 
+## [1.2.0] - 2022-06-12
+
+### Changed
+
+- BOT automatically sends messages to start and stop the game based on configuration
+- It's possibile to set the days valid for the game
+- Command `winner` is automatically invoked from the BOT at the end of the game
+
 ## [1.1.1] - 2022-06-08
 
 ### Changed
