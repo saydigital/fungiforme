@@ -4,7 +4,7 @@
 from os.path import exists
 import configparser
 from datetime import datetime, timedelta
-from discord.ext import commands
+from discord.ext import commands, tasks
 from discord import Embed, Color, File as DiscordFile
 import logsetup
 import logging
@@ -28,6 +28,11 @@ DATE_FORMAT = config['DATE']['DateFormat']
 HOUR_START = config['DATE']['HourStart']
 HOUR_END = config['DATE']['HourEnd']
 TIMEZONE_HOURS_DELAY = config['DATE'].getint('TimezoneHoursDelay')
+VALID_DAYS = [
+    int(vd)
+    for vd in
+    config['DATE'].get('ValidDays', '1,2,3,4,5').split(',')
+    ]
 
 ISSUE_URL = "https://github.com/saydigital/fungiforme/issues/new?"
 
@@ -117,7 +122,31 @@ async def get_original_message(channel, message):
 
 
 async def send_gif(channel, gif):
-    await channel.send(file=DiscordFile(f'assets/gifs/{gif}.gif'))
+    message = await channel.send(file=DiscordFile(f'assets/gifs/{gif}.gif'))
+    return message
+
+
+@tasks.loop(minutes=1.0)
+async def send_match_messages():
+    now = datetime.now()
+    string_now = f"{now.hour:02}:{now.minute:02}:00"
+    day = now.isoweekday()
+    if day in VALID_DAYS and string_now == HOUR_START:
+        logger.info(f"Auto Start match for {string_now}")
+        channel = fungiforme.get_channel(CHANNEL_ID)
+        await send_gif(channel, 'begin')
+    elif day in VALID_DAYS and string_now == HOUR_END:
+        logger.info(f"Auto End match for {string_now}")
+        channel = fungiforme.get_channel(CHANNEL_ID)
+        gif_message = await send_gif(channel, 'end')
+        logger.info("Auto invoke winner command")
+        ctx = await fungiforme.get_context(gif_message)
+        await ctx.invoke(fungiforme.get_command('winner'))
+
+
+@fungiforme.listen()
+async def on_ready():
+    send_match_messages.start()
 
 
 @fungiforme.event
