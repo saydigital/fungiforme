@@ -86,6 +86,9 @@ def _set_file_logging(log_config):
 
 
 def setup(config):
+    """
+    Setup logging.
+    """
     if not config.has_section("LOGGING"):
         _set_console_logging()
     else:
