@@ -32,7 +32,9 @@ VALID_DAYS = [
     int(vd) for vd in config["DATE"].get("ValidDays", "1,2,3,4,5").split(",")
 ]
 
-ISSUE_URL = "https://github.com/saydigital/fungiforme/issues/new?"
+CODE_BASE_URL = "https://github.com/saydigital/fungiforme"
+ISSUE_BASE_URL = f"{CODE_BASE_URL}/issues"
+ISSUE_NEW_URL = f"{ISSUE_BASE_URL}/new?"
 
 
 fungiforme = commands.Bot(command_prefix=COMMAND_PREFIX)
@@ -300,7 +302,7 @@ async def issue(ctx):
                         Button(
                             label="Create the issue on github",
                             style=ButtonType().Link,
-                            url=f"{ISSUE_URL}{url_params}",
+                            url=f"{ISSUE_NEW_URL}{url_params}",
                         )
                     ]
                 )
@@ -309,6 +311,36 @@ async def issue(ctx):
     else:
         await message.reply(
             "You need to reply to a message to create an issue."
+        )
+
+
+@fungiforme.command()
+async def info(ctx):
+    """
+    Sends the complete information about the BOT to the channel.
+    """
+    with open("VERSION", encoding="UTF-8") as version_file:
+        version_text = version_file.read().replace("\n", "")
+    info_text = f"**Fungiforme** *v{version_text}*"
+    await ctx.message.channel.send(info_text)
+    await buttons.send(
+            channel=ctx.message.channel.id,
+            components=[
+                ActionRow(
+                    [
+                        Button(
+                            label="Homepage",
+                            style=ButtonType().Link,
+                            url=CODE_BASE_URL,
+                        ),
+                        Button(
+                            label="Issues",
+                            style=ButtonType().Link,
+                            url=ISSUE_BASE_URL,
+                        )
+                    ]
+                )
+            ],
         )
 
 
