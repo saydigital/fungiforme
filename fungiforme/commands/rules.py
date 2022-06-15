@@ -39,6 +39,11 @@ class Rules(commands.Cog):
 
 
 def setup(bot):
+    """
+    Command setup function.
+
+    :param bot: Fungiforme bot
+    """
     command_handler = RulesHandler(bot)
     command = Rules(bot, command_handler)
     bot.add_cog(command)

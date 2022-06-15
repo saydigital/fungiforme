@@ -4,6 +4,11 @@
 from discord import Embed
 
 
+CODE_BASE_URL = "https://github.com/saydigital/fungiforme"
+ISSUE_BASE_URL = f"{CODE_BASE_URL}/issues"
+ISSUE_NEW_URL = f"{ISSUE_BASE_URL}/new?"
+
+
 def has_gif_element(message):
     """
     Returns True if the message has a gif element (embed or attach).

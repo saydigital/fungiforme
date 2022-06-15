@@ -235,6 +235,11 @@ class Winner(commands.Cog):
 
 
 def setup(bot):
+    """
+    Command setup function.
+
+    :param bot: Fungiforme bot
+    """
     command_handler = WinnerHandler(bot)
     command = Winner(bot, command_handler)
     bot.add_cog(command)

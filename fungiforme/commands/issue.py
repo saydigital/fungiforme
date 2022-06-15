@@ -7,10 +7,10 @@ from discord.ext import commands
 from fungiforme.fungiforme import register_extension
 from urllib import parse
 from discord_buttons_plugin import ActionRow, Button, ButtonType
+from fungiforme.utils import ISSUE_NEW_URL
 
 
 logger = logging.getLogger(__name__)
-ISSUE_URL = "https://github.com/saydigital/fungiforme/issues/new?"
 
 
 class IssueHandler:
@@ -41,12 +41,11 @@ class IssueHandler:
                 ctx.message.channel,
                 msg_type='button',
                 content=[
-                ActionRow(
-                    [
+                    ActionRow([
                         Button(
                             label="Create the issue on github",
                             style=ButtonType().Link,
-                            url=f"{ISSUE_URL}{url_params}",
+                            url=f"{ISSUE_NEW_URL}{url_params}",
                         )
                     ])
                 ]
