@@ -1,9 +1,14 @@
+# Copyright 2022-TODAY Rapsodoo Italia S.r.L. (www.rapsodoo.com)
+# # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl)
+
 import logging
 
 from discord.ext import commands
 from discord import Embed, Color
 from datetime import datetime, timedelta
 from fungiforme import utils
+from fungiforme.fungiforme import register_extension
+
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +26,15 @@ class WinnerHandler:
         self.minimum_gif_reactions = bot.config['FUNGIFORME'].getint('MinimumGifReactions')
     
     def _prepare_date_params(self, date=None, hour_start=None, hour_end=None):
+        """
+        Prepares date and time parameters handling default values if not specified.
+
+        :param date date: Day when a fungiforme game occurred
+        :param time hour_start: Start hour of a fungiforme game
+        :param time hour_end: End hour of a fungiforme game
+
+        :returns a tuple with date, start hour and end hour of a Fungiforme game
+        """
         date_result = date
         hour_start_result = hour_start
         hour_end_result = hour_end
@@ -35,6 +49,14 @@ class WinnerHandler:
         return date_result, hour_start_result, hour_end_result
 
     def _get_ordered_votes_and_gifs(self, gifs):
+        """
+        Returns a list of GIFS sorted by descending reaction count and
+        a list of the top 3 votes.
+
+        :param list gifs: List of info dict about gifs
+
+        :returns a tuple of orderd votes and gifs
+        """
         ordered_votes = set()
         ordered_gifs = {}
         if gifs:
@@ -49,6 +71,16 @@ class WinnerHandler:
         return ordered_votes, ordered_gifs
 
     async def _get_valid_messages_to_compute(self, contest_channel, after_date, before_date):
+        """
+        Returns a list of discord messages, containing GIFS and reaction, 
+        which are eligible for victory.
+
+        :param contest_channel: Fungiforme game channel
+        :param datetime after_date: Oldest message timestamp
+        :param datetime before_date: Newest message timestamp
+
+        :returns a list of valid gifs info dicts
+        """
         gifs = {}
         autovote_users = []
         messages = await self.bot.get_history_messages(
@@ -80,6 +112,13 @@ class WinnerHandler:
         return gifs
 
     async def _show_final_game_rank(self, response_channel, gifs, ordered_votes):
+        """
+        Creates game rank and sends it to discord channel.
+
+        :param response_channel: Fungiforme game response channel
+        :param dict gifs: Gifs info dict
+        :param dict ordered_votes: List of the top 3 votes
+        """
         # Gold, silver, and bronze
         colors = [Color.gold(), Color.dark_gray(), Color.from_rgb(184, 115, 51)]
         default_color = Color.blue()
@@ -138,9 +177,8 @@ class WinnerHandler:
                     # to add the medal.
                     try:
                         await self.bot.add_message_reaction(message, medal)
-                    except:
-                        # TODO Log error
-                        pass
+                    except Exception as e:
+                        logger.error(e, exec_info=True)
             
             await self.bot.send_channel_message(
                 response_channel, 
@@ -187,11 +225,11 @@ class Winner(commands.Cog):
 
     @commands.command()
     async def winner(self, ctx, date=None, hour_start=None, hour_end=None):
-        """Shows the winner of a Fungiforme game event.
+        """Sends messages for the winners of the game.
         
-        :param date date: day when a fungiforme game occurred
-        :param time hour_start: start hour of a fungiforme game
-        :param time hour_end: end hour of a fungiforme game
+        :param date date: Day when a fungiforme game occurred
+        :param time hour_start: Start hour of a fungiforme game
+        :param time hour_end: End hour of a fungiforme game
         """
         await self.handler.handle(ctx, date, hour_start, hour_end)
 
@@ -200,3 +238,6 @@ def setup(bot):
     command_handler = WinnerHandler(bot)
     command = Winner(bot, command_handler)
     bot.add_cog(command)
+
+
+register_extension(__name__)
