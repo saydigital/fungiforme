@@ -1,5 +1,11 @@
 # Fungiforme
 
+## [1.2.1] - 2022-06-13
+
+### Added
+
+- Command `info` to show BOT information in the channel
+
 ## [1.2.0] - 2022-06-12
 
 ### Changed
