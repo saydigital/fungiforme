@@ -58,3 +58,7 @@ backupCount = 10
 when = D
 # If 'logRotate' is set to 'time', specify rotation interval. 
 interval = 1
+
+[EXTENSIONS]
+# comma separated python modules expressed in dot notation
+modules=<comma_separated_python_modules>

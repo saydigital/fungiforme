@@ -5,17 +5,24 @@ import logging
 
 from os.path import exists
 from discord.ext import commands
-from fungiforme.fungiforme import register_extension
 
 
 logger = logging.getLogger(__name__)
 
 
 class RulesHandler:
+    """
+    Rules Command Handler.
+    """
     def __init__(self, bot):
         self.bot = bot
-    
+
     async def handle(self, ctx):
+        """
+        Rules Command Handler entrypoint.
+
+        :param ctx: command context
+        """
         rules_text = (
             "No rules defined!\n"
             "> What is an anarchist? "
@@ -25,12 +32,15 @@ class RulesHandler:
             with open("RULES.md", encoding="UTF-8") as rule_file:
                 rules_text = rule_file.read()
         await self.bot.send_channel_message(ctx.message.channel, content=rules_text)
-    
+
 
 class Rules(commands.Cog):
-    def __init__(self, bot, handler):
+    """
+    Rules Command.
+    """
+    def __init__(self, bot):
         self.bot = bot
-        self.handler = handler
+        self.handler = RulesHandler(bot)
 
     @commands.command()
     async def rules(self, ctx):
@@ -44,9 +54,5 @@ def setup(bot):
 
     :param bot: Fungiforme bot
     """
-    command_handler = RulesHandler(bot)
-    command = Rules(bot, command_handler)
+    command = Rules(bot)
     bot.add_cog(command)
-
-
-register_extension(__name__)

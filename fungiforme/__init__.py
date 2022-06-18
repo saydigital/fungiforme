@@ -3,4 +3,3 @@
 
 from . import fungiforme
 from . import utils
-from .commands import *

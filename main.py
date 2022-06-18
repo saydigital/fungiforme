@@ -2,16 +2,19 @@
 # # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl)
 
 import configparser
-import logsetup
 
+from bot import logsetup
 from fungiforme.fungiforme import Fungiforme
 
 
 def main():
+    """
+    Main entrypoint.
+    """
     config = configparser.ConfigParser()
     config.read('fungiforme.ini', encoding='UTF-8')
     logsetup.setup(config)
-    
+
     fungiforme = Fungiforme(config)
     fungiforme.load_extensions()
     fungiforme.run()

@@ -3,9 +3,7 @@
 
 import logging
 
-from os.path import exists
 from discord.ext import commands
-from fungiforme.fungiforme import register_extension
 from discord_buttons_plugin import ActionRow, Button, ButtonType
 from fungiforme.utils import CODE_BASE_URL, ISSUE_BASE_URL
 
@@ -14,10 +12,18 @@ logger = logging.getLogger(__name__)
 
 
 class InfoHandler:
+    """
+    Info Command Handler.
+    """
     def __init__(self, bot):
         self.bot = bot
 
     async def handle(self, ctx):
+        """
+        Info Command Handler entrypoint.
+
+        :param ctx: command context
+        """
         with open("VERSION", encoding="UTF-8") as version_file:
             version_text = version_file.read().replace("\n", "")
             info_text = f"**Fungiforme** *v{version_text}*"
@@ -40,12 +46,15 @@ class InfoHandler:
                     ])
                 ]
             )
-    
+
 
 class Info(commands.Cog):
-    def __init__(self, bot, handler):
+    """
+    Info Command.
+    """
+    def __init__(self, bot):
         self.bot = bot
-        self.handler = handler
+        self.handler = InfoHandler(bot)
 
     @commands.command()
     async def info(self, ctx):
@@ -59,9 +68,5 @@ def setup(bot):
 
     :param bot: Fungiforme bot
     """
-    command_handler = InfoHandler(bot)
-    command = Info(bot, command_handler)
+    command = Info(bot)
     bot.add_cog(command)
-
-
-register_extension(__name__)

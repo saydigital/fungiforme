@@ -17,14 +17,14 @@ def has_gif_element(message):
         has_embed_gif = True
     else:
         has_embed_gif = False
-    
+
     if message.attachments and message.attachments[0].filename.lower().endswith('.gif'):
         has_attachment_gif = True
     else:
         has_attachment_gif = False
 
     return has_embed_gif or has_attachment_gif
-    
+
 
 def is_valid_reply_gif(message, original_message):
     """
@@ -44,7 +44,7 @@ def is_valid_reply_gif(message, original_message):
             return True
     else:
         return False
-        
+
 
 def is_valid_gif_message(message, original_message):
     """

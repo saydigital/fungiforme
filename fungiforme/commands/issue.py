@@ -3,9 +3,9 @@
 
 import logging
 
-from discord.ext import commands
-from fungiforme.fungiforme import register_extension
 from urllib import parse
+
+from discord.ext import commands
 from discord_buttons_plugin import ActionRow, Button, ButtonType
 from fungiforme.utils import ISSUE_NEW_URL
 
@@ -14,10 +14,18 @@ logger = logging.getLogger(__name__)
 
 
 class IssueHandler:
+    """
+    Issue Command Handler.
+    """
     def __init__(self, bot):
         self.bot = bot
-    
+
     async def handle(self, ctx):
+        """
+        Issue Command Handler entrypoint.
+
+        :param ctx: command context
+        """
         message = ctx.message
         original_message = await self.bot.get_original_message(ctx.message.channel, message)
         if original_message:
@@ -51,13 +59,19 @@ class IssueHandler:
                 ]
             )
         else:
-            await self.bot.message_reply(message, content="You need to reply to a message to create an issue.")
-    
+            await self.bot.message_reply(
+                message,
+                content="You need to reply to a message to create an issue."
+            )
+
 
 class Issue(commands.Cog):
-    def __init__(self, bot, handler):
+    """
+    Issue Command.
+    """
+    def __init__(self, bot):
         self.bot = bot
-        self.handler = handler
+        self.handler = IssueHandler(bot)
 
     @commands.command()
     async def issue(self, ctx):
@@ -66,9 +80,10 @@ class Issue(commands.Cog):
 
 
 def setup(bot):
-    command_handler = IssueHandler(bot)
-    command = Issue(bot, command_handler)
+    """
+    Command setup function.
+
+    :param bot: Fungiforme bot
+    """
+    command = Issue(bot)
     bot.add_cog(command)
-
-
-register_extension(__name__)

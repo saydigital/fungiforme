@@ -3,17 +3,19 @@
 
 import logging
 
-from discord.ext import commands
-from discord import Embed, Color
 from datetime import datetime, timedelta
+from discord.ext import commands
+from discord import Embed, Color, HTTPException, InvalidArgument
 from fungiforme import utils
-from fungiforme.fungiforme import register_extension
 
 
 logger = logging.getLogger(__name__)
 
 
 class WinnerHandler:
+    """
+    Rules Command Handler.
+    """
     def __init__(self, bot):
         self.bot = bot
         self.contest_channel_id = bot.config['DISCORD'].getint('Channel')
@@ -24,7 +26,7 @@ class WinnerHandler:
             'TimezoneHoursDelay'
         )
         self.minimum_gif_reactions = bot.config['FUNGIFORME'].getint('MinimumGifReactions')
-    
+
     def _prepare_date_params(self, date=None, hour_start=None, hour_end=None):
         """
         Prepares date and time parameters handling default values if not specified.
@@ -38,14 +40,14 @@ class WinnerHandler:
         date_result = date
         hour_start_result = hour_start
         hour_end_result = hour_end
-        
+
         if not date_result:
             date_result = datetime.today().strftime(self.date_format)
         if not hour_start_result:
             hour_start_result = self.bot.config['DATE']['HourStart']
         if not hour_end_result:
             hour_end_result = self.bot.config['DATE']['HourEnd']
-        
+
         return date_result, hour_start_result, hour_end_result
 
     def _get_ordered_votes_and_gifs(self, gifs):
@@ -72,7 +74,7 @@ class WinnerHandler:
 
     async def _get_valid_messages_to_compute(self, contest_channel, after_date, before_date):
         """
-        Returns a list of discord messages, containing GIFS and reaction, 
+        Returns a list of discord messages, containing GIFS and reaction,
         which are eligible for victory.
 
         :param contest_channel: Fungiforme game channel
@@ -149,18 +151,18 @@ class WinnerHandler:
                 message_points_message = f" (+{message_points} points)"
             else:
                 message_points_message = ""
-            embedVar = Embed(
+            embed_var = Embed(
                 title=f"{str(votes)} votes{gif_points_message}",
                 description=f"Voted by *{voted_by}*",
                 color=color,
                 url=message.jump_url
             )
-            embedVar.set_author(
+            embed_var.set_author(
                 name=message.author.display_name,
                 icon_url=message.author.avatar_url,
             )
-            embedVar.set_thumbnail(url=utils.get_message_gif_url(message))
-            embedVar.add_field(
+            embed_var.set_thumbnail(url=utils.get_message_gif_url(message))
+            embed_var.add_field(
                 name="As reply to",
                 value=f"{original_message.content}\n"
                 f"- {original_message.author.name}{message_points_message} -",
@@ -177,26 +179,34 @@ class WinnerHandler:
                     # to add the medal.
                     try:
                         await self.bot.add_message_reaction(message, medal)
-                    except Exception as e:
-                        logger.error(e, exec_info=True)
-            
+                    except (HTTPException, InvalidArgument) as err:
+                        logger.error(err, exec_info=True)
+
             await self.bot.send_channel_message(
-                response_channel, 
-                msg_type='embed', 
-                content=embedVar
+                response_channel,
+                msg_type='embed',
+                content=embed_var
             )
 
     async def handle(self, ctx, date=None, hour_start=None, hour_end=None):
+        """
+        Rules Command Handler entrypoint.
+
+        :param ctx: command context
+        :param date date: Day when a fungiforme game occurred
+        :param time hour_start: Start hour of a fungiforme game
+        :param time hour_end: End hour of a fungiforme game
+        """
         date, hour_start, hour_end = self._prepare_date_params(date, hour_start, hour_end)
         contest_channel = self.bot.get_channel(self.contest_channel_id)
         response_channel = ctx.message.channel
         await self.bot.send_channel_message(
-            response_channel, 
+            response_channel,
             content='Let me check...'
         )
         await self.bot.send_channel_message(
-            response_channel, 
-            msg_type='gif', 
+            response_channel,
+            msg_type='gif',
             content='confused'
         )
         after_date = datetime.strptime(
@@ -206,27 +216,29 @@ class WinnerHandler:
             f'{date} {hour_end}', self.datetime_format
         ) - timedelta(hours=self.timezone_hours_delay)
 
-        
         gifs = await self._get_valid_messages_to_compute(contest_channel, after_date, before_date)
         ordered_votes, ordered_gifs = self._get_ordered_votes_and_gifs(gifs)
-        
+
         await self._show_final_game_rank(response_channel, ordered_gifs, ordered_votes)
         await self.bot.send_channel_message(
-            response_channel, 
-            msg_type='gif', 
+            response_channel,
+            msg_type='gif',
             content='done'
         )
-    
+
 
 class Winner(commands.Cog):
-    def __init__(self, bot, handler):
+    """
+    Winner Command.
+    """
+    def __init__(self, bot):
         self.bot = bot
-        self.handler = handler
+        self.handler = WinnerHandler(bot)
 
     @commands.command()
     async def winner(self, ctx, date=None, hour_start=None, hour_end=None):
         """Sends messages for the winners of the game.
-        
+
         :param date date: Day when a fungiforme game occurred
         :param time hour_start: Start hour of a fungiforme game
         :param time hour_end: End hour of a fungiforme game
@@ -240,9 +252,5 @@ def setup(bot):
 
     :param bot: Fungiforme bot
     """
-    command_handler = WinnerHandler(bot)
-    command = Winner(bot, command_handler)
+    command = Winner(bot)
     bot.add_cog(command)
-
-
-register_extension(__name__)

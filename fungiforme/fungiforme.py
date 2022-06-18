@@ -3,46 +3,23 @@
 
 import logging
 
-from discord.ext.commands import Bot
 from discord import File as DiscordFile
 from discord_buttons_plugin import ButtonsClient
 
+from bot.bot import BaseBot
+
 
 logger = logging.getLogger(__name__)
-EXTENSION_REGISTRY = set()
 
 
-def register_extension(extension_module):
+class Fungiforme(BaseBot):
     """
-    Add an extension module to the extension registry.
-
-    :param str extension_module: full module name of the extension to add
+    Fungiforme bot implementation.
     """
-    EXTENSION_REGISTRY.add(extension_module)
-
-
-class Fungiforme(Bot):
     def __init__(self, config, description=None, **options):
-        self.config = config
-        command_prefix = config['DISCORD']['CommandPrefix']
-        super().__init__(command_prefix, description=description, **options)
+        super().__init__(config, description, **options)
         self.buttons = ButtonsClient(self)
 
-    def run(self):
-        """
-        Starts Fungiforme bot.
-        """
-        token = self.config['DISCORD']['Token']
-        super().run(token)
-
-    def load_extensions(self):
-        """
-        Loads all extensions added to te extension registry.
-        """
-        for extension in EXTENSION_REGISTRY:
-            logger.info(f"Loading extension: {extension}")
-            super().load_extension(extension)
-    
     async def send_channel_message(self, channel, msg_type='text', content=""):
         """
         Sends a message to a discord channel.
@@ -90,7 +67,7 @@ class Fungiforme(Bot):
         :param datetime before_date: Newest message timestamp
 
         :returns a list of discord messages
-        """        
+        """
         return await channel.history(
             limit=500,
             oldest_first=False,
