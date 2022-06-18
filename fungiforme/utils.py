@@ -37,13 +37,11 @@ def is_valid_reply_gif(message, original_message):
         if has_gif_element(original_message):
             # users cannot reply to another GIF
             return False
-        elif original_message.author == message.author:
+        if original_message.author == message.author:
             # users cannot reply to their own messages
             return False
-        else:
-            return True
-    else:
-        return False
+        return True
+    return False
 
 
 def is_valid_gif_message(message, original_message):
@@ -62,7 +60,6 @@ def get_message_gif_url(message):
     """
     if message.embeds and message.embeds[0].type == 'gifv':
         return message.embeds[0].thumbnail.url
-    elif message.attachments and message.attachments[0].filename.lower().endswith('.gif'):
+    if message.attachments and message.attachments[0].filename.lower().endswith('.gif'):
         return message.attachments[0].url
-    else:
-        return Embed.Empty
+    return Embed.Empty

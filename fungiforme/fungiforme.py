@@ -3,6 +3,7 @@
 
 import logging
 
+from datetime import datetime, timedelta
 from discord import File as DiscordFile
 from discord_buttons_plugin import ButtonsClient
 
@@ -19,6 +20,32 @@ class Fungiforme(BaseBot):
     def __init__(self, config, description=None, **options):
         super().__init__(config, description, **options)
         self.buttons = ButtonsClient(self)
+
+    def get_game_time_interval(self, date=None, start_hour=None, end_hour=None):
+        """
+        Returns the time interval for the game considering time delta.
+        """
+        date_format = self.config['DATE']['DateFormat']
+        datetime_format = self.config['DATE']['DatetimeFormat']
+        timezone_hours_delay = self.config['DATE'].getint(
+            'TimezoneHoursDelay'
+        )
+        if not date:
+            date = datetime.today().strftime(date_format)
+        if not start_hour:
+            start_hour = self.config['DATE']['HourStart']
+        if not end_hour:
+            end_hour = self.config['DATE']['HourEnd']
+
+        start_datetime = datetime.strptime(
+            f"{date} {start_hour}", datetime_format
+        ) - timedelta(hours=timezone_hours_delay)
+
+        end_datetime = datetime.strptime(
+            f"{date} {end_hour}", datetime_format
+        ) - timedelta(hours=timezone_hours_delay)
+
+        return start_datetime, end_datetime
 
     async def send_channel_message(self, channel, msg_type='text', content=""):
         """
@@ -108,3 +135,34 @@ class Fungiforme(BaseBot):
             await message.reply(file=DiscordFile(f"assets/gifs/{content}.gif"))
         else:
             await message.reply(content)
+
+    async def get_payload_user(self, payload):
+        """
+        Returns the user associated to a payload
+
+        :param payload: raw event payload data
+
+        returns: discord user
+        """
+        return await self.fetch_user(payload.user_id)
+
+    async def get_channel_message(self, channel, message_id):
+        """
+        Returns a message with the message_id sent on a discord channel
+
+        :param channel: discord channel
+        :param message_id: discord message id
+
+        returns: discord message
+        """
+        return await channel.fetch_message(message_id)
+
+    def get_payload_channel(self, payload):
+        """
+        Returns a channel associated to a payload
+
+        :param payload: raw event payload data
+
+        returns: discord channel
+        """
+        return self.get_channel(payload.channel_id)
