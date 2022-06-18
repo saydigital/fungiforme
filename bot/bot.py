@@ -67,5 +67,6 @@ class BaseBot(Bot):
         current_module_path = '.'.join(current_module_path[:-1])
         return set([
             f"{current_module_path}.commands",
-            f"{current_module_path}.event_listeners"
+            f"{current_module_path}.event_listeners",
+            f"{current_module_path}.tasks",
         ])

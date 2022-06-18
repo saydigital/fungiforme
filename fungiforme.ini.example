@@ -61,4 +61,7 @@ interval = 1
 
 [EXTENSIONS]
 # comma separated python modules expressed in dot notation
+# modules placed under: commands, event_listeners, tasks directories are
+# loaded automatically. The root directory for auto loaded modules
+# must be the same of the bot
 modules=<comma_separated_python_modules>

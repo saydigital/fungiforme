@@ -39,7 +39,7 @@ class OnRawReactionRemoveHandler:
             and payload.emoji.name == self.valid_emoji
             and payload.channel_id == self.contest_channel_id
         ):
-            channel = self.bot.get_payload_channel(payload)
+            channel = self.bot.get_channel(payload.channel_id)
             message = await self.bot.get_channel_message(channel, payload.message_id)
             original_message = await self.bot.get_original_message(channel, message)
             if utils.is_valid_reply_gif(message, original_message):

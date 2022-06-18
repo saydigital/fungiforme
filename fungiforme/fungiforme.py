@@ -56,13 +56,13 @@ class Fungiforme(BaseBot):
         :param content: Content to send
         """
         if msg_type == 'embed':
-            await channel.send(embed=content)
+            return await channel.send(embed=content)
         elif msg_type == 'gif':
-            await channel.send(file=DiscordFile(f"assets/gifs/{content}.gif"))
+            return await channel.send(file=DiscordFile(f"assets/gifs/{content}.gif"))
         elif msg_type == 'button':
-            await self.buttons.send(channel=channel.id, components=content)
+            return await self.buttons.send(channel=channel.id, components=content)
         else:
-            await channel.send(content)
+            return await channel.send(content)
 
     async def get_original_message(self, channel, message):
         """
@@ -157,12 +157,15 @@ class Fungiforme(BaseBot):
         """
         return await channel.fetch_message(message_id)
 
-    def get_payload_channel(self, payload):
+    async def auto_invoke_command(self, ctx, command_name):
         """
-        Returns a channel associated to a payload
+        Auto invokes a bot command.
 
-        :param payload: raw event payload data
-
-        returns: discord channel
+        :param ctx: context
+        :param str command_name: command name to invoke
         """
-        return self.get_channel(payload.channel_id)
+        await ctx.invoke(self.get_command(command_name))
+
+    # async method get_context must be overridden for test purpouses
+
+    # method get_channel must be overridden for test purpouses
