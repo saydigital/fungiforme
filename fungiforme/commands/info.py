@@ -5,6 +5,7 @@ import logging
 
 from discord.ext import commands
 from discord_buttons_plugin import ActionRow, Button, ButtonType
+# pylint: disable=no-name-in-module
 from fungiforme.utils import CODE_BASE_URL, ISSUE_BASE_URL
 
 

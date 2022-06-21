@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timedelta
 from discord.ext import commands
 from discord import Embed, Color, HTTPException, InvalidArgument
+# pylint: disable=no-name-in-module
 from fungiforme import utils
 
 

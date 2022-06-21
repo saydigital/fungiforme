@@ -6,6 +6,7 @@ import logging
 
 from discord.ext import commands
 from discord import Embed, Color
+# pylint: disable=no-name-in-module
 from fungiforme import utils
 
 

@@ -7,6 +7,7 @@ from urllib import parse
 
 from discord.ext import commands
 from discord_buttons_plugin import ActionRow, Button, ButtonType
+# pylint: disable=no-name-in-module
 from fungiforme.utils import ISSUE_NEW_URL
 
 

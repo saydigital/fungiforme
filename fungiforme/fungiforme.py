@@ -57,12 +57,12 @@ class Fungiforme(BaseBot):
         """
         if msg_type == 'embed':
             return await channel.send(embed=content)
-        elif msg_type == 'gif':
+        if msg_type == 'gif':
             return await channel.send(file=DiscordFile(f"assets/gifs/{content}.gif"))
-        elif msg_type == 'button':
+        if msg_type == 'button':
             return await self.buttons.send(channel=channel.id, components=content)
-        else:
-            return await channel.send(content)
+
+        return await channel.send(content)
 
     async def get_original_message(self, channel, message):
         """
