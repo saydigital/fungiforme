@@ -50,8 +50,8 @@ def is_valid_gif_message(message, original_message):
     """
     if is_valid_reply_gif(message, original_message) and message.reactions:
         return True
-    else:
-        return False
+
+    return False
 
 
 def get_message_gif_url(message):

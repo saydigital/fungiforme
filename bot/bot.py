@@ -27,7 +27,7 @@ class BaseBot(Bot):
         Starts bot.
         """
         token = self.config['DISCORD']['Token']
-        super().run(token)
+        super().run(token, *args, **kwargs)
 
     def load_extensions(self):
         """

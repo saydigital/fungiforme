@@ -56,13 +56,14 @@ class SendMatchMessages(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.handler = SendMatchMessagesHandler(bot)
-        # pylint marks this line as an error but,
-        # according to discord.py docs, this is necessary to start the loop
+        # pylint: disable=no-member
         self.send_match_messages.start()
 
     def cog_unload(self):
-        # pylint marks this line as an error but,
-        # according to discord.py docs, this is necessary to stop the loop
+        """
+        Hook for cog class unload
+        """
+        # pylint: disable=no-member
         self.send_match_messages.cancel()
 
     @tasks.loop(minutes=1.0)
