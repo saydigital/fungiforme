@@ -1,5 +1,57 @@
 # Fungiforme
 
+## [2.0.0] - 2022-06-23
+
+### Changed
+
+- Code refactoring: split commands, event listeners and tasks into different classes
+following discord.py Cog pattern.
+
+## [1.2.1] - 2022-06-13
+
+### Added
+
+- Command `info` to show BOT information in the channel
+
+## [1.2.0] - 2022-06-12
+
+### Changed
+
+- BOT automatically sends messages to start and stop the game based on configuration
+- It's possibile to set the days valid for the game
+- Command `winner` is automatically invoked from the BOT at the end of the game
+
+## [1.1.1] - 2022-06-08
+
+### Changed
+
+- Command `winner` show only players with valid points
+
+## [1.1.0] - 2022-06-07
+
+### Added
+
+- Command `issue` to generate information to create issue on Github
+
+## [1.0.3] - 2022-06-07
+
+### Fixed
+
+- warning on messages sent when a fungiforme game is finished
+- messages with homemade gifs ignored when detecting winner
+
+## [1.0.2] - 2022-06-07
+
+### Fixed
+
+- Reply to a deleted message generate a 404 error in API
+
+## [1.0.1] - 2022-05-15
+
+### Added
+
+- logging
+
 ## [1.0.0] - 2022-05-05
 
 ### Added
@@ -10,9 +62,3 @@
 - Configurable rules
 - Check if an user remove a vote
 - Add a medal on message based on position and configuration
-
-## [1.0.1] - 2022-05-15
-
-### Added
-
-- logging

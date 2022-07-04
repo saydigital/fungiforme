@@ -27,6 +27,17 @@ DateFormat = %%Y-%%m-%%d
 HourStart = 14:00:00
 HourEnd = 15:00:00
 TimezoneHoursDelay = 2
+# List of valid days for the matches.
+# Days are expressed in the iso format:
+#  - Monday = 1
+#  - Tuesday = 2
+#  - Wednesday = 3
+#  - Thursday = 4
+#  - Friday = 5
+#  - Saturday = 6
+#  - Sunday = 7
+# Default values are from Monday to Friday
+ValidDays = 1,2,3,4,5
 
 [LOGGING]
 level = info
@@ -47,3 +58,10 @@ backupCount = 10
 when = D
 # If 'logRotate' is set to 'time', specify rotation interval. 
 interval = 1
+
+[EXTENSIONS]
+# comma separated python modules expressed in dot notation
+# modules placed under: commands, event_listeners, tasks directories are
+# loaded automatically. The root directory for auto loaded modules
+# must be the same of the bot
+modules=<comma_separated_python_modules>
