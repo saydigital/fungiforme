@@ -1,5 +1,12 @@
 # Fungiforme
 
+## [2.0.0] - 2022-06-23
+
+### Changed
+
+- Code refactoring: split commands, event listeners and tasks into different classes
+following discord.py Cog pattern.
+
 ## [1.2.1] - 2022-06-13
 
 ### Added
