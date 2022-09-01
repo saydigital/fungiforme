@@ -79,6 +79,30 @@ class Issue(commands.Cog):
         """Sends the complete issue link prepared for Github. Must be used in reply to a message."""
         await self.handler.handle(ctx)
 
+    @commands.command()
+    async def debug(self, ctx, message_id=None):
+        """Sends a message with relevant information about a message."""
+        channel = self.bot.get_channel(
+            self.bot.config['DISCORD'].getint('Channel'))
+        msg = await channel.fetch_message(message_id)
+        data =[
+            f"* **ID**: {msg.id}",
+            f"* **Channel**: {msg.channel}",
+            f"* **Author**: {msg.author}",
+            f"* **Content**: {msg.content}",
+            f"* **Reference**: {msg.reference}",
+            f"* **Reference Message**: "
+            f"{msg.reference.message_id if msg.reference else None}",
+            f"* **Embeds**: {msg.embeds if msg.embeds else None}",
+            f"* **Embed 0 Type**: "
+            f"{msg.embeds[0].type if msg.embeds else None}",
+            f"* **Attachments**: "
+            f"{msg.attachments if msg.attachments else None}",
+            f"* **Attachment 0 Filename**: "
+            f"{msg.attachments[0].filename if msg.attachments else None}",
+        ]
+        await ctx.message.channel.send("\n".join(data))
+
 
 def setup(bot):
     """

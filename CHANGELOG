@@ -1,5 +1,11 @@
 # Fungiforme
 
+## [2.1.0] - 2022-08-12
+
+### Added
+
+- `debug` command to get information about a message from its ID
+
 ## [2.0.0] - 2022-06-23
 
 ### Changed
