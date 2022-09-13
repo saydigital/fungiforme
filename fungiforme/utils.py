@@ -40,6 +40,10 @@ def is_valid_reply_gif(message, original_message):
         if original_message.author == message.author:
             # users cannot reply to their own messages
             return False
+        if message.author.username in ["Amedeo", "Tommaso"]:
+            # if you are Amedeo or Tommaso, go and play blind man's bluff on the
+            # highway
+            return False
         return True
     return False
 
