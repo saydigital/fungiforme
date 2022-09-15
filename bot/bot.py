@@ -34,6 +34,9 @@ class BaseBot(Bot):
         super().run(token, *args, **kwargs)
 
     async def setup_hook(self):
+        """
+        Bot setup hook
+        """
         my_guild = Object(self.config['DISCORD']['GuildId'])
         await self.load_extensions()
         await self.tree.sync(guild=my_guild)
