@@ -2,7 +2,8 @@
 # Copy it and rename it `fungiforme.ini`
 
 [DISCORD]
-Token = Test of Token
+Token = <BOT TOken>
+GuildId = <ID of the server>
 Channel = 0000000099999999
 CommandPrefix = fungiforme!
 
@@ -22,10 +23,11 @@ MedalPosition2 = 🥈
 MedalPosition3 = 🥉
 
 [DATE]
-DatetimeFormat = %%Y-%%m-%%d %%H:%%M:%%S
+DatetimeFormat = %%Y-%%m-%%d %%H:%%M:%%S%%z
 DateFormat = %%Y-%%m-%%d
 HourStart = 14:00:00
 HourEnd = 15:00:00
+TimeZone = +0200
 TimezoneHoursDelay = 2
 # List of valid days for the matches.
 # Days are expressed in the iso format:

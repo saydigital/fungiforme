@@ -1,9 +1,6 @@
 # Copyright 2022-TODAY Rapsodoo Italia S.r.L. (www.rapsodoo.com)
 # # License LGPL-3.0 or later (https://www.gnu.org/licenses/lgpl)
 
-from discord import Embed
-
-
 CODE_BASE_URL = "https://github.com/saydigital/fungiforme"
 ISSUE_BASE_URL = f"{CODE_BASE_URL}/issues"
 ISSUE_NEW_URL = f"{ISSUE_BASE_URL}/new?"
@@ -62,4 +59,4 @@ def get_message_gif_url(message):
         return message.embeds[0].thumbnail.url
     if message.attachments and message.attachments[0].filename.lower().endswith('.gif'):
         return message.attachments[0].url
-    return Embed.Empty
+    return None

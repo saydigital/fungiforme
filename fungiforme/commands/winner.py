@@ -3,9 +3,9 @@
 
 import logging
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from discord.ext import commands
-from discord import Embed, Color, HTTPException, InvalidArgument
+from discord import Embed, Color, HTTPException, app_commands, Object, Interaction
 # pylint: disable=no-name-in-module
 from fungiforme import utils
 
@@ -180,7 +180,7 @@ class WinnerHandler:
                     # to add the medal.
                     try:
                         await self.bot.add_message_reaction(message, medal)
-                    except (HTTPException, InvalidArgument) as err:
+                    except (HTTPException, TypeError) as err:
                         logger.error(err, exec_info=True)
 
             await self.bot.send_channel_message(
@@ -189,18 +189,17 @@ class WinnerHandler:
                 content=embed_var
             )
 
-    async def handle(self, ctx, date=None, hour_start=None, hour_end=None):
+    async def handle(self, response_channel, date=None, hour_start=None, hour_end=None):
         """
         Rules Command Handler entrypoint.
 
-        :param ctx: command context
+        :param response_channel: channel used to send response
         :param date date: Day when a fungiforme game occurred
         :param time hour_start: Start hour of a fungiforme game
         :param time hour_end: End hour of a fungiforme game
         """
         date, hour_start, hour_end = self._prepare_date_params(date, hour_start, hour_end)
         contest_channel = self.bot.get_channel(self.contest_channel_id)
-        response_channel = ctx.message.channel
         await self.bot.send_channel_message(
             response_channel,
             content='Let me check...'
@@ -210,12 +209,11 @@ class WinnerHandler:
             msg_type='gif',
             content='confused'
         )
-        after_date = datetime.strptime(
-            f'{date} {hour_start}', self.datetime_format
-        ) - timedelta(hours=self.timezone_hours_delay)
-        before_date = datetime.strptime(
-            f'{date} {hour_end}', self.datetime_format
-        ) - timedelta(hours=self.timezone_hours_delay)
+        after_date, before_date = self.bot.get_game_time_interval(
+            date=date,
+            start_hour=hour_start,
+            end_hour=hour_end
+        )
 
         gifs = await self._get_valid_messages_to_compute(contest_channel, after_date, before_date)
         ordered_votes, ordered_gifs = self._get_ordered_votes_and_gifs(gifs)
@@ -236,22 +234,34 @@ class Winner(commands.Cog):
         self.bot = bot
         self.handler = WinnerHandler(bot)
 
-    @commands.command()
-    async def winner(self, ctx, date=None, hour_start=None, hour_end=None):
+    @app_commands.command()
+    async def winner(
+        self,
+        interaction: Interaction,
+        date: str=None,
+        hour_start: str=None,
+        hour_end: str=None
+    ):
         """Sends messages for the winners of the game.
 
         :param date date: Day when a fungiforme game occurred
         :param time hour_start: Start hour of a fungiforme game
         :param time hour_end: End hour of a fungiforme game
         """
-        await self.handler.handle(ctx, date, hour_start, hour_end)
+        response_channel = interaction.channel
+        await self.bot.send_interaction_response(
+            interaction,
+            content='Ok'
+        )
+        await self.handler.handle(response_channel, date, hour_start, hour_end)
 
 
-def setup(bot):
+async def setup(bot):
     """
     Command setup function.
 
     :param bot: Fungiforme bot
     """
     command = Winner(bot)
-    bot.add_cog(command)
+    my_guild = Object(bot.config['DISCORD']['GuildId'])
+    await bot.add_cog(command, guilds=[my_guild])

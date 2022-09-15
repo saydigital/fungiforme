@@ -1,5 +1,11 @@
 # Fungiforme
 
+## [3.0.0] - 2022-09-15
+
+### Changed
+
+- Migration to discord.py 2.0.1 and slash commands
+
 ## [2.1.0] - 2022-08-12
 
 ### Added

@@ -3,7 +3,6 @@
 
 import logging
 
-from datetime import datetime, timedelta
 from discord.ext import commands
 from discord import Embed, Color
 # pylint: disable=no-name-in-module
@@ -21,13 +20,6 @@ class OnRawReactionRemoveHandler:
         self.bot = bot
         self.valid_emoji = bot.config['FUNGIFORME'].get('ValidEmoji', '')
         self.contest_channel_id = bot.config['DISCORD'].getint('Channel')
-        self.date_format = bot.config['DATE']['DateFormat']
-        self.datetime_format = bot.config['DATE']['DatetimeFormat']
-        self.timezone_hours_delay = bot.config['DATE'].getint(
-            'TimezoneHoursDelay'
-        )
-        self.hour_start = bot.config['DATE']['HourStart']
-        self.hour_end = bot.config['DATE']['HourEnd']
 
     async def handle(self, payload):
         """
@@ -44,14 +36,8 @@ class OnRawReactionRemoveHandler:
             message = await self.bot.get_channel_message(channel, payload.message_id)
             original_message = await self.bot.get_original_message(channel, message)
             if utils.is_valid_reply_gif(message, original_message):
-                date = datetime.today().strftime(self.date_format)
-                after_date = datetime.strptime(
-                    f"{date} {self.hour_start}", self.datetime_format
-                ) - timedelta(hours=self.timezone_hours_delay)
-                before_date = datetime.strptime(
-                    f"{date} {self.hour_end}", self.datetime_format
-                ) - timedelta(hours=self.timezone_hours_delay)
-                if after_date <= message.created_at <= before_date:
+                today_game_start, today_game_end = self.bot.get_game_time_interval()
+                if today_game_start <= message.created_at <= today_game_end:
                     user = await self.bot.get_payload_user(payload)
                     embed_var = Embed(
                         title=f"Warning! {user.name} has been warned!",
@@ -63,7 +49,7 @@ class OnRawReactionRemoveHandler:
                     )
                     embed_var.set_author(
                         name=user.display_name,
-                        icon_url=user.avatar_url,
+                        icon_url=user.display_avatar.url,
                     )
                     await self.bot.send_channel_message(
                         channel,
@@ -85,11 +71,11 @@ class OnRawReactionRemove(commands.Cog):
         await self.handler.handle(payload)
 
 
-def setup(bot):
+async def setup(bot):
     """
     Event setup function.
 
     :param bot: Fungiforme bot
     """
     event = OnRawReactionRemove(bot)
-    bot.add_cog(event)
+    await bot.add_cog(event)

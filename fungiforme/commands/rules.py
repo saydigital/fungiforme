@@ -4,6 +4,7 @@
 import logging
 
 from os.path import exists
+from discord import app_commands, Object, Interaction
 from discord.ext import commands
 
 
@@ -17,11 +18,11 @@ class RulesHandler:
     def __init__(self, bot):
         self.bot = bot
 
-    async def handle(self, ctx):
+    async def handle(self, interaction: Interaction):
         """
         Rules Command Handler entrypoint.
 
-        :param ctx: command context
+        :param interaction: command interaction
         """
         rules_text = (
             "No rules defined!\n"
@@ -31,7 +32,7 @@ class RulesHandler:
         if exists("RULES.md"):
             with open("RULES.md", encoding="UTF-8") as rule_file:
                 rules_text = rule_file.read()
-        await self.bot.send_channel_message(ctx.message.channel, content=rules_text)
+        await self.bot.send_interaction_response(interaction, content=rules_text)
 
 
 class Rules(commands.Cog):
@@ -42,17 +43,18 @@ class Rules(commands.Cog):
         self.bot = bot
         self.handler = RulesHandler(bot)
 
-    @commands.command()
-    async def rules(self, ctx):
+    @app_commands.command()
+    async def rules(self, interaction: Interaction):
         """Sends the complete rules text to the channel."""
-        await self.handler.handle(ctx)
+        await self.handler.handle(interaction)
 
 
-def setup(bot):
+async def setup(bot):
     """
     Command setup function.
 
     :param bot: Fungiforme bot
     """
     command = Rules(bot)
-    bot.add_cog(command)
+    my_guild = Object(bot.config['DISCORD']['GuildId'])
+    await bot.add_cog(command, guilds=[my_guild])
