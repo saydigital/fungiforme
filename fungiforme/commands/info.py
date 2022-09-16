@@ -67,7 +67,6 @@ async def setup(bot):
 
     :param bot: Fungiforme bot
     """
-    Info.GUILD_ID = bot.config['DISCORD']['GuildId']
     command = Info(bot)
     my_guild = Object(bot.config['DISCORD']['GuildId'])
     await bot.add_cog(command, guilds=[my_guild])

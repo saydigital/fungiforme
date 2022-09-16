@@ -2,7 +2,7 @@
 # Copy it and rename it `fungiforme.ini`
 
 [DISCORD]
-Token = <BOT TOken>
+Token = <BOT Token>
 GuildId = <ID of the server>
 Channel = 0000000099999999
 CommandPrefix = fungiforme!
