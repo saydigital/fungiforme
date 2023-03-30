@@ -7,6 +7,7 @@ import logging
 
 from os.path import basename, join, isfile
 from discord.ext.commands import Bot
+from discord import Intents, Object
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +21,10 @@ class BaseBot(Bot):
     def __init__(self, config, description=None, **options):
         self.config = config
         command_prefix = config['DISCORD']['CommandPrefix']
-        super().__init__(command_prefix, description=description, **options)
+        intents = options.pop('intents', Intents.all())
+        intents.presences = False
+        intents.members = False
+        super().__init__(command_prefix, description=description, intents=intents, **options)
 
     def run(self, *args, **kwargs):
         """
@@ -29,13 +33,21 @@ class BaseBot(Bot):
         token = self.config['DISCORD']['Token']
         super().run(token, *args, **kwargs)
 
-    def load_extensions(self):
+    async def setup_hook(self):
+        """
+        Bot setup hook
+        """
+        my_guild = Object(self.config['DISCORD']['GuildId'])
+        await self.load_extensions()
+        await self.tree.sync(guild=my_guild)
+
+    async def load_extensions(self):
         """
         Loads all extensions
         """
         for extension in self._get_extensions():
             logger.info("Loading extension: %s", extension)
-            super().load_extension(extension)
+            await super().load_extension(extension)
 
     def _get_extensions(self):
         modules_to_load = self._get_default_extensions()

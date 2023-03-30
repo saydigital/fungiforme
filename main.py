@@ -16,7 +16,6 @@ def main():
     logsetup.setup(config)
 
     fungiforme = Fungiforme(config)
-    fungiforme.load_extensions()
     fungiforme.run()
 
 

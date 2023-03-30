@@ -3,8 +3,9 @@
 
 import logging
 
+from discord import app_commands, Interaction, Object, ButtonStyle
 from discord.ext import commands
-from discord_buttons_plugin import ActionRow, Button, ButtonType
+from discord.ui import View, Button
 # pylint: disable=no-name-in-module
 from fungiforme.utils import CODE_BASE_URL, ISSUE_BASE_URL
 
@@ -19,34 +20,31 @@ class InfoHandler:
     def __init__(self, bot):
         self.bot = bot
 
-    async def handle(self, ctx):
+    async def handle(self, interaction: Interaction):
         """
         Info Command Handler entrypoint.
 
-        :param ctx: command context
+        :param interaction: command interaction
         """
         with open("VERSION", encoding="UTF-8") as version_file:
             version_text = version_file.read().replace("\n", "")
             info_text = f"**Fungiforme** *v{version_text}*"
-            await self.bot.send_channel_message(ctx.message.channel, content=info_text)
-            await self.bot.send_channel_message(
-                ctx.message.channel,
-                msg_type='button',
-                content=[
-                    ActionRow([
-                        Button(
-                            label="Homepage",
-                            style=ButtonType().Link,
-                            url=CODE_BASE_URL,
-                        ),
-                        Button(
-                            label="Issues",
-                            style=ButtonType().Link,
-                            url=ISSUE_BASE_URL,
-                        )
-                    ])
-                ]
+            view = View()
+            view.add_item(
+                Button(
+                    label="Homepage",
+                    style=ButtonStyle.link,
+                    url=CODE_BASE_URL,
+                )
             )
+            view.add_item(
+                Button(
+                    label="Issues",
+                    style=ButtonStyle.link,
+                    url=ISSUE_BASE_URL,
+                )
+            )
+            await self.bot.send_interaction_response(interaction, content=info_text, view=view)
 
 
 class Info(commands.Cog):
@@ -57,17 +55,18 @@ class Info(commands.Cog):
         self.bot = bot
         self.handler = InfoHandler(bot)
 
-    @commands.command()
-    async def info(self, ctx):
+    @app_commands.command()
+    async def info(self, interaction: Interaction):
         """Sends the complete information about the BOT to the channel."""
-        await self.handler.handle(ctx)
+        await self.handler.handle(interaction)
 
 
-def setup(bot):
+async def setup(bot):
     """
     Command setup function.
 
     :param bot: Fungiforme bot
     """
     command = Info(bot)
-    bot.add_cog(command)
+    my_guild = Object(bot.config['DISCORD']['GuildId'])
+    await bot.add_cog(command, guilds=[my_guild])

@@ -49,7 +49,7 @@ class OnMessageHandler:
             )
             embed_var.set_author(
                 name=message.author.display_name,
-                icon_url=message.author.avatar_url,
+                icon_url=message.author.display_avatar.url,
             )
             await self.bot.send_channel_message(
                 message.channel,
@@ -72,11 +72,11 @@ class OnMessage(commands.Cog):
         await self.handler.handle(message)
 
 
-def setup(bot):
+async def setup(bot):
     """
     Event setup function.
 
     :param bot: Fungiforme bot
     """
     event = OnMessage(bot)
-    bot.add_cog(event)
+    await bot.add_cog(event)

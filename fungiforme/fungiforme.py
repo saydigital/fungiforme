@@ -3,9 +3,9 @@
 
 import logging
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from discord import File as DiscordFile
-from discord_buttons_plugin import ButtonsClient
+from discord.utils import MISSING
 
 from bot.bot import BaseBot
 
@@ -17,9 +17,6 @@ class Fungiforme(BaseBot):
     """
     Fungiforme bot implementation.
     """
-    def __init__(self, config, description=None, **options):
-        super().__init__(config, description, **options)
-        self.buttons = ButtonsClient(self)
 
     def get_game_time_interval(self, date=None, start_hour=None, end_hour=None):
         """
@@ -27,9 +24,7 @@ class Fungiforme(BaseBot):
         """
         date_format = self.config['DATE']['DateFormat']
         datetime_format = self.config['DATE']['DatetimeFormat']
-        timezone_hours_delay = self.config['DATE'].getint(
-            'TimezoneHoursDelay'
-        )
+        timezone = self.config['DATE']['TimeZone']
         if not date:
             date = datetime.today().strftime(date_format)
         if not start_hour:
@@ -37,13 +32,8 @@ class Fungiforme(BaseBot):
         if not end_hour:
             end_hour = self.config['DATE']['HourEnd']
 
-        start_datetime = datetime.strptime(
-            f"{date} {start_hour}", datetime_format
-        ) - timedelta(hours=timezone_hours_delay)
-
-        end_datetime = datetime.strptime(
-            f"{date} {end_hour}", datetime_format
-        ) - timedelta(hours=timezone_hours_delay)
+        start_datetime = datetime.strptime(f"{date} {start_hour}{timezone}", datetime_format)
+        end_datetime = datetime.strptime(f"{date} {end_hour}{timezone}", datetime_format)
 
         return start_datetime, end_datetime
 
@@ -63,6 +53,16 @@ class Fungiforme(BaseBot):
             return await self.buttons.send(channel=channel.id, components=content)
 
         return await channel.send(content)
+
+    async def send_interaction_response(self, interaction, content="", view=MISSING):
+        """
+        Sends a interaction response.
+
+        :param interaction: Discord interaction
+        :param content: Content to send
+        :param view: View object to send in message
+        """
+        return await interaction.response.send_message(content, view=view)
 
     async def get_original_message(self, channel, message):
         """
@@ -95,12 +95,12 @@ class Fungiforme(BaseBot):
 
         :returns a list of discord messages
         """
-        return await channel.history(
+        return [message async for message in channel.history(
             limit=500,
             oldest_first=False,
             after=after_date,
             before=before_date,
-        ).flatten()
+        )]
 
     async def get_reaction_user(self, reaction):
         """
@@ -110,7 +110,7 @@ class Fungiforme(BaseBot):
 
         :returns a list of users
         """
-        return await reaction.users().flatten()
+        return [user async for user in reaction.users()]
 
     async def add_message_reaction(self, message, reaction):
         """
@@ -157,14 +157,15 @@ class Fungiforme(BaseBot):
         """
         return await channel.fetch_message(message_id)
 
-    async def auto_invoke_command(self, ctx, command_name):
+    async def auto_invoke_cog_command(self, ctx, cog_name):
         """
         Auto invokes a bot command.
 
         :param ctx: context
         :param str command_name: command name to invoke
         """
-        await ctx.invoke(self.get_command(command_name))
+        command_handler = self.get_cog(cog_name).handler
+        await command_handler.handle(ctx.channel)
 
     # async method get_context must be overridden for test purpouses
 

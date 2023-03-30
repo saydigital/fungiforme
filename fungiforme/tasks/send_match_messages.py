@@ -46,7 +46,7 @@ class SendMatchMessagesHandler:
             )
             logger.info("Auto invoke winner command")
             ctx = await self.bot.get_context(gif_message)
-            await self.bot.auto_invoke_command(ctx, "winner")
+            await self.bot.auto_invoke_cog_command(ctx, "Winner")
 
 
 class SendMatchMessages(commands.Cog):
@@ -59,7 +59,7 @@ class SendMatchMessages(commands.Cog):
         # pylint: disable=no-member
         self.send_match_messages.start()
 
-    def cog_unload(self):
+    async def cog_unload(self):
         """
         Hook for cog class unload
         """
@@ -81,11 +81,11 @@ class SendMatchMessages(commands.Cog):
         await self.bot.wait_until_ready()
 
 
-def setup(bot):
+async def setup(bot):
     """
     Event setup function.
 
     :param bot: Fungiforme bot
     """
     event = SendMatchMessages(bot)
-    bot.add_cog(event)
+    await bot.add_cog(event)

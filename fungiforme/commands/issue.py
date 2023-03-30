@@ -5,8 +5,9 @@ import logging
 
 from urllib import parse
 
+from discord import app_commands, Object, Interaction, ButtonStyle
 from discord.ext import commands
-from discord_buttons_plugin import ActionRow, Button, ButtonType
+from discord.ui import View, Button
 # pylint: disable=no-name-in-module
 from fungiforme.utils import ISSUE_NEW_URL
 
@@ -21,14 +22,21 @@ class IssueHandler:
     def __init__(self, bot):
         self.bot = bot
 
-    async def handle(self, ctx):
+    async def handle(self, interaction: Interaction, message_link: str):
         """
         Issue Command Handler entrypoint.
 
-        :param ctx: command context
+        :param interaction: command interaction
+        :param message_link: link of the message to report
         """
-        message = ctx.message
-        original_message = await self.bot.get_original_message(ctx.message.channel, message)
+        try:
+            message_id = int(message_link.split('/')[-1])
+            original_message = await self.bot.get_channel_message(
+                interaction.channel, message_id
+            )
+        except ValueError:
+            original_message = None
+
         if original_message:
             data = {
                 "id": original_message.id,
@@ -46,23 +54,19 @@ class IssueHandler:
                 "body": data,
             }
             url_params = parse.urlencode(params)
-            await self.bot.send_channel_message(
-                ctx.message.channel,
-                msg_type='button',
-                content=[
-                    ActionRow([
-                        Button(
-                            label="Create the issue on github",
-                            style=ButtonType().Link,
-                            url=f"{ISSUE_NEW_URL}{url_params}",
-                        )
-                    ])
-                ]
+            view = View()
+            view.add_item(
+                Button(
+                    label="Create the issue on github",
+                    style=ButtonStyle.link,
+                    url=f"{ISSUE_NEW_URL}{url_params}",
+                )
             )
+            await self.bot.send_interaction_response(interaction, view=view)
         else:
-            await self.bot.message_reply(
-                message,
-                content="You need to reply to a message to create an issue."
+            await self.bot.send_interaction_response(
+                interaction,
+                content="You need to provide a valid message link to create an issue."
             )
 
 
@@ -74,17 +78,17 @@ class Issue(commands.Cog):
         self.bot = bot
         self.handler = IssueHandler(bot)
 
-    @commands.command()
-    async def issue(self, ctx):
-        """Sends the complete issue link prepared for Github. Must be used in reply to a message."""
-        await self.handler.handle(ctx)
+    @app_commands.command()
+    async def issue(self, interaction: Interaction, message_link: str):
+        """Sends the complete issue link prepared for Github."""
+        await self.handler.handle(interaction, message_link)
 
-    @commands.command()
-    async def debug(self, ctx, message_id=None):
+    @app_commands.command()
+    async def debug(self, interaction: Interaction, message_id: str):
         """Sends a message with relevant information about a message."""
         channel = self.bot.get_channel(
             self.bot.config['DISCORD'].getint('Channel'))
-        msg = await channel.fetch_message(message_id)
+        msg = await self.bot.get_channel_message(channel, message_id)
         data =[
             f"* **ID**: {msg.id}",
             f"* **Channel**: {msg.channel}",
@@ -101,14 +105,15 @@ class Issue(commands.Cog):
             f"* **Attachment 0 Filename**: "
             f"{msg.attachments[0].filename if msg.attachments else None}",
         ]
-        await ctx.message.channel.send("\n".join(data))
+        await self.bot.send_interaction_response(interaction, content="\n".join(data))
 
 
-def setup(bot):
+async def setup(bot):
     """
     Command setup function.
 
     :param bot: Fungiforme bot
     """
     command = Issue(bot)
-    bot.add_cog(command)
+    my_guild = Object(bot.config['DISCORD']['GuildId'])
+    await bot.add_cog(command, guilds=[my_guild])
