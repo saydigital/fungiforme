@@ -160,7 +160,7 @@ class WinnerHandler:
             )
             embed_var.set_author(
                 name=message.author.display_name,
-                icon_url=message.author.avatar_url,
+                icon_url=message.author.avatar.url,
             )
             embed_var.set_thumbnail(url=utils.get_message_gif_url(message))
             embed_var.add_field(
