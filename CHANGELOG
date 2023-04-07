@@ -1,5 +1,11 @@
 # Fungiforme
 
+## [3.0.1] - 2023-04-07
+
+### Fixed
+
+- Error on Winner command because of avatar_url message parameter
+
 ## [3.0.0] - 2022-09-15
 
 ### Changed
