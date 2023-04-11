@@ -3,7 +3,7 @@
 
 import logging
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from discord.ext import commands, tasks
 
 
@@ -22,6 +22,19 @@ class SendMatchMessagesHandler:
         self.contest_channel_id = bot.config['DISCORD'].getint('Channel')
         self.hour_start = bot.config['DATE']['HourStart']
         self.hour_end = bot.config['DATE']['HourEnd']
+        self.timezone = bot.config['DATE']['TimeZone']
+
+    def _get_tz_aware_now(self):
+        try:
+            sign = "-" if self.timezone[0] == "-" else "+"
+            hours_str = f"{sign}{self.timezone[1:3]}"
+            minutes_str = f"{sign}{self.timezone[3:]}"
+
+            hours_td = int(hours_str)
+            minutes_td = int(minutes_str)
+            return datetime.utcnow() + timedelta(hours=hours_td, minutes=minutes_td)
+        except (IndexError, TypeError, ValueError):
+            return datetime.utcnow()
 
     async def handle(self):
         """
@@ -29,7 +42,7 @@ class SendMatchMessagesHandler:
 
         :param payload: raw event payload data
         """
-        now = datetime.now()
+        now = self._get_tz_aware_now()
         string_now = f"{now.hour:02}:{now.minute:02}:00"
         day = now.isoweekday()
         if day in self.valid_days and string_now == self.hour_start:

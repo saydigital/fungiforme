@@ -1,5 +1,11 @@
 # Fungiforme
 
+## [3.0.2] - 2023-04-11
+
+### Fixed
+
+- Start/End match messages scheduled without considering timezone
+
 ## [3.0.1] - 2023-04-07
 
 ### Fixed
